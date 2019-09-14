@@ -1,2 +1,7 @@
-# cs-433-projects
-Machine Learning team projects
+# Machine Learning Projects
+
+Team:
+- Bastien Beuchat
+- Robin Mamié
+- Jeremy Mion
+
