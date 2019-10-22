@@ -1,3 +1,5 @@
+import numpy as np
+
 """
 Two functions to expand a feature matrix
 
@@ -38,7 +40,7 @@ def polynomial_expansion(x, degree = 2):
         return phi
 
     for i in range(0,x.shape[1]):
-        x = np.c_[x, np.apply_along_axis(build_poly , 0, x[:,i], degree)]
+        x = np.c_[x, np.apply_along_axis(poly , 0, x[:,i], degree)]
     return x
 
 
