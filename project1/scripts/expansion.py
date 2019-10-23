@@ -39,6 +39,8 @@ def polynomial_expansion(x, degree = 2):
             phi = np.c_[phi, acc]
         return phi
 
+    if( degree == 1):
+        return x
     for i in range(0,x.shape[1]):
         x = np.c_[x, np.apply_along_axis(poly , 0, x[:,i], degree)]
     return x
