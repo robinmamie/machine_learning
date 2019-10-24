@@ -1,6 +1,6 @@
 CODE :
 
-- implement cross-validation and use it to tune algorithm
+- implement cross-validation and use it to tune hyper-parameters
 - check correctness
 - put the 6 required functions in implementations.py
 - document the code
