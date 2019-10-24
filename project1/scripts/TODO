@@ -1,0 +1,17 @@
+CODE :
+
+- implement cross-validation and use it to tune hyper-parameters
+- check correctness
+- put the 6 required functions in implementations.py
+- document the code
+- modularize and avoid duplication of code
+- write readme describing how to run our code
+
+REPORT :
+- write
+
+Key points : 
+ - PDF
+ - 2 pages (strict limit)
+ - reproducibility and baselines
+
