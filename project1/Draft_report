@@ -1,11 +1,11 @@
-In the context of this first project in the Machine Learning (ML) course, we implemented some ML algorithm in order to solve the challenge that was provided : predict from CERN experimental data if a particle is a boson or not.
+In the context of this first project in the Machine Learning (ML) course, we implemented some ML algorithms in order to solve the challenge that was provided : predict from CERN experimental data if a particle is a boson or not.
 
-At this purpose, we implemented the techniques that was required and we tried to evaluate them and to fine tune our hyper-parameters. In addition to the machine learning algorithms in itself, we had to deal with the data to feed in our ML algorithm. We hence prepared the data and tried various things to do feature expansion. 
+At this purpose, we implemented the techniques that was required and we tried to evaluate them and to fine tune our hyper-parameters. In addition to the machine learning algorithms in itself, we had to deal with the data to feed in our ML algorithm. We hence prepared the data and tried various things to expand the features. 
 
 Methodology
 The first thing we did is to explore our data and document ourself about the dataset. We are not physicists, so we were not able to understand completely the exact meaning of each column in our dataset. We were more interested in finding importance of some feature or see if there is some link between them.
 
-Once we knew better our dataset, we began to prepare them. We first do the minimal preparation that is normalization and handling not available values. Then we implemented our machine learning algorithm, once we had them we trained some models and evaluated them. We then restart to prepare the data in order to see if we could get more accurate models with more careful prepared data. For training good models, we have to define their hyper parameters, to find good parameters we did some cross-validation.   
+Once we knew better our dataset, we began to prepare them. We first do the minimal preparation that is normalization and handling the not available values. Then we implemented the machine learning algorithms, once we had them we trained some models and evaluated them. We then restart to prepare the data in order to see if we could get more accurate models with more careful prepared data. For training good models, we had to define their hyper parameters. For this task we did some cross-validation passes with all the algorithms.   
 
 Data preparation
 The first step of data preparation was to handle unavailable data. Indeed, in the dataset there was some data that did not exist for some columns. We could not just drop these rows or columns because the fact that the data did not exist was an information we had to take in account. The first strategy we applied was to replace unavaible data by the mean. We find a more meaningful technique, in the dataset documentation we learned that unavailable data depended on some other columns values and that we could break our dataset in four sub-dataset that did not contain any unavailable data.
@@ -13,6 +13,8 @@ The first step of data preparation was to handle unavailable data. Indeed, in th
 Then we normalized them, this has the great effect to reduce the values and improve the stability of the computations, i.e.: the values overflow less quickly when the data is feed in the machine learning algorithm.
 
 At this point we have usable data, but we tried to improve the behaviors of our model with feature expansion. We tried some polynomial expansion of various degrees and some other expansions combining features together. 
+
+TODO : EXPLAIN JEREMY BLACK MAGIC 
 
 Results
 
