@@ -1,5 +1,7 @@
 # Higgs Boson Detection
 
+All the code to reproduce the results of the Higgs Boson detection are available on he script folder. The score of 81.4% was achieved but because of a unseeded attempt, the code provided here can only reproduce a score of 81.2% on aicrowd.com.
+
 ## Files
 * run.py : main program that compute our best solution (ridge regression) for this challenge
 * proj1_helpers.py : helpers functions for loading and saving csv
