@@ -30,6 +30,20 @@ The */script/run.py* file can be configured by three variables :
 * DATA_TEST_PATH  : path of the test dataset (test.csv)
 * OUTPUT_PATH     : path of the output csv that will contain predictions that are submittable on aicrowd.com
 
+## Machine learning algorithms
+Six machines algorithms are implemented in implementations.py. Each one has its own method. The six methods return a tuple __(weights, loss)__. The six different signatures are the following : 
+
+| Function                                                             | Details                                             |
+|----------------------------------------------------------------------|-----------------------------------------------------|
+| least_squares GD(y, tx, initial w, max iters, gamma)                 | Linear regression using gradient descent            |
+| least_squares_SGD(y, tx, initial w, max iters, gamma)                | Linear regression using stochastic gradient descent |
+| least_squares(y, tx)                                                 | Least squares regression using normal equations     |
+| ridge_regression(y, tx, lambda )                                     | Ridge regression using normal equations             |
+| logistic_regression(y, tx, initial w, max iters, gamma)              | Logistic regression using  SGD                      |
+| reg_logistic_regression(y, tx, lambda , initial w, max iters, gamma) | Regularized logistic regression using SGD           |
+
+More accurate documentation about the type of the parameters is available in the file:
+
 ## Team:
 - Bastien Beuchat
 - Robin Mamié
