@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.linalg as la
 from common_functions import *
 
 
@@ -69,7 +70,8 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma):
     n2 = n*2
 
     # Data shuffle
-    data_size = len(y)
+    data_size = y.shape[0]
+    np.random.seed(2019)
     shuffled_indices = np.random.permutation(np.arange(data_size))
     shuffled_y = y[shuffled_indices]
     shuffled_tx = tx[shuffled_indices]
@@ -131,7 +133,7 @@ def ridge_regression(y, tx, lambda_):
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
     """
-    Logistic regression using gradient descent or SGD.
+    Logistic regression using SGD.
 
     Parameters
     ----------
@@ -151,23 +153,30 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     (ndarray, float)
         Last weight vector and the corresponding loss value
     """
-    threshold = 1e-8
     w = initial_w
+    w = w[:,np.newaxis]
     y = y[:,np.newaxis]
     losses = []
 
-    for iter in range(max_iters):
-        loss, gradient = logistic_regression_step(y, tx, w)
+    # Data shuffle
+    data_size = y.shape[0]
+    np.random.seed(2019)
+    shuffled_indices = np.random.permutation(np.arange(data_size))
+    shuffled_y = y[shuffled_indices]
+    shuffled_tx = tx[shuffled_indices]
+    shuffled_y = shuffled_y[:,np.newaxis]
+
+    for n_iter, by, btx in zip(range(max_iters), shuffled_y, shuffled_tx):
+        btx = btx[:,np.newaxis].T
+        loss, gradient = logistic_regression_step(by, btx, w)
         w -= gamma * gradient
         losses.append(loss)
-        if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
-            break
 
-    return w, losses[-1]
+    return np.squeeze(w), compute_loss_logistic(y, tx, w)
 
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     """
-    Regularized logistic regression using gradient descent or SGD.
+    Regularized logistic regression using SGD.
 
     Parameters
     ----------
@@ -189,21 +198,25 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     (ndarray, float)
         Last weight vector and the corresponding loss value
     """
-    threshold = 1e-8
-    losses = []
-    y = (y+1)/2
     w = initial_w
+    w = w[:,np.newaxis]
     y = y[:,np.newaxis]
+    losses = []
 
-    for iter in range(max_iters):
+    # Data shuffle
+    data_size = y.shape[0]
+    np.random.seed(2019)
+    shuffled_indices = np.random.permutation(np.arange(data_size))
+    shuffled_y = y[shuffled_indices]
+    shuffled_tx = tx[shuffled_indices]
+    shuffled_y = shuffled_y[:,np.newaxis]
+
+    for n_iter, by, btx in zip(range(max_iters), shuffled_y, shuffled_tx):
+        btx = btx[:,np.newaxis].T
         loss, gradient = logistic_regression_step(y, tx, w)
-        loss     += lambda_ * np.squeeze(w.T @ w)
+        loss += lambda_ * np.squeeze(w.T @ w)
         gradient += 2 * lambda_ * w
         w -= gamma * gradient
 
-        losses.append(loss)
-        if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
-            break
-
-    return w, losses[-1]
+    return np.squeeze(w), compute_loss_logistic(y, tx, w)
 
