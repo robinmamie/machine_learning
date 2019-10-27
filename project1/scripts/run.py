@@ -33,7 +33,7 @@ def prepare_dataset(dataset):
 
     def split_on_jet_num(dataset, DER_mass_MMC_is_defined):
         """
-        Split the dataset in meaningful subdataset
+        Split the dataset in meaningful subdataset.
         Parameters
         ----------
         dataset: DataFrame
@@ -73,7 +73,7 @@ def prepare_dataset(dataset):
 
 def extract_predictions(dataset):
     """
-    Extract the y vectors of a Higgs boson dataset
+    Extract the y vectors of a Higgs boson dataset.
 
     Parameters
     ----------
@@ -88,7 +88,7 @@ def extract_predictions(dataset):
 
 def mass_DER_importance_feature_expansion(dataset):
     """
-    Give some importance to the DER mass
+    Give some importance to the DER mass.
 
     Parameters
     ----------
@@ -104,7 +104,7 @@ def mass_DER_importance_feature_expansion(dataset):
 
 def tilda_x(X):
     """
-    Compute the tilda matrix of the feature matrix
+    Compute the tilda matrix of the feature matrix.
 
     Parameters
     ----------
@@ -119,7 +119,7 @@ def tilda_x(X):
 
 def normalize_dataset(dataset):
     """
-    Normalize the dataset
+    Normalize the dataset.
 
     Parameters
     ----------
@@ -141,7 +141,7 @@ Prediction function
 """
 def predict(test_dataset,test_tX,weights):
     """
-    Predict the labels for the test dataset
+    Predict the labels for the test dataset.
 
     Parameters
     ----------
