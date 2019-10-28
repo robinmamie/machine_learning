@@ -27,7 +27,7 @@ In order to run the solution, the datasets for the Higgs Boson detection challen
 
 ## Running our solution
 
-In order to run our solution, we provide the */scripts/run.py* file.
+In order to run our solution, we provide the `scripts/run.py` file.
 
     cd  scripts
     python run.py
@@ -54,6 +54,8 @@ Six machines algorithms are implemented in implementations.py. Each one has its 
 | ridge_regression(y, tx, lambda )                                     | Ridge regression using normal equations             |
 | logistic_regression(y, tx, initial w, max iters, gamma)              | Logistic regression using  SGD                      |
 | reg_logistic_regression(y, tx, lambda , initial w, max iters, gamma) | Regularized logistic regression using SGD           |
+
+The labels fed into `logistic_regression` and `reg_logistic_regresssion` should be either 0s or 1s, and not -1s and 1. Otherwise, the loss will not make any sense.
 
 More accurate documentation about the type of the parameters is available in the file `scripts/implementations.py`.
 
