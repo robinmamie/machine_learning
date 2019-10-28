@@ -34,6 +34,8 @@ In order to run our solution, we provide the `scripts/run.py` file.
 
 This will load the data, prepare it, train the model with already optimized hyper-parameters and compute the prediction for the test dataset.
 
+This will create the file `predictions.csv` in the script folder.
+
 ## Configurations
 
 The `scripts/run.py` file can be configured with these three variables:
