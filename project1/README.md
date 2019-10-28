@@ -11,6 +11,7 @@ The following files are located in the `scripts` folder.
 * `implementations.py`: ML learning algorithm implementation
 * `expansion.py`: provides a function used to expand a feature matrix
 * `common_functions.py`: provides functions that are used by ML algorithms (example: cost and gradient functions)
+- `Final.ipynb`: notebook used to compute weights on all 6 algorithms, and does the cross validation for the ridge regression
 
 ## Prerequisites
 
