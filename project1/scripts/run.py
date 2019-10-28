@@ -183,7 +183,7 @@ for idx, sub_dataset in enumerate(prepared_dataset):
 Training the model
 """
 # parameters optimized for the ridge regression computed by cross-validation
-ridge_parameters = [0.004393970560760791, 0.001, 1e-05, 0.01, 0.00031622776601683794, 3.1622776601683795e-05]
+ridge_parameters = [0.003888155180308085, 4.641588833612772e-05, 0.00010608183551394483, 8.376776400682924e-05, 0.0058780160722749115,0.011937766417144358]
 
 weights = []
 for i in range(len(prepared_dataset)):
