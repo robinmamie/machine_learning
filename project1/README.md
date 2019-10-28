@@ -18,7 +18,7 @@ The following files are located in the `scripts` folder.
 
 * Python 3, with the following libraries installed:
     * NumPy, allows efficient computations
-    * Pandas, this library is used only for data loading and data subsetting (used in `run.py`)
+    * Pandas 0.25.1, this library is used only for data loading and data subsetting (used in `run.py`)
 
 ### Data
 
