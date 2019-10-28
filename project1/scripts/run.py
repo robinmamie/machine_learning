@@ -7,7 +7,7 @@ from expansion import *
 DATA_TRAIN_PATH = '../data/train.csv'
 DATA_TEST_PATH  = '../data/test.csv'
 OUTPUT_PATH     = 'predictions.csv'
-POLYNOMIAL_EXPANSION_DEGREE = 13
+POLYNOMIAL_EXPANSION_DEGREE = 5
 
 """
 Data cleaning and data preparation functions
