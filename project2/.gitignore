@@ -1,2 +1,11 @@
-Datasets
-training
+# Folders
+Datasets/
+predictions_*/
+test_set_images/
+training/
+
+# Debug from tf_v2_upgrade.sh
+report.txt
+
+# Our submissions
+submission-*.csv
