@@ -192,6 +192,23 @@ def make_img_overlay(img, predicted_img):
     new_img = Image.blend(background, overlay, 0.2)
     return new_img
 
+def expand_image_set(image_dir, gt_dir, files):
+    def rotate_and_flip(img, rot, name, id):
+        if rot:
+            img = img.transpose(r)
+            img.save(name+f'satImage_{id:03d}.png')
+        id += 100
+        img.transpose(Image.FLIP_LEFT_RIGHT).save(name+f'satImage_{id:03d}.png')
+        return id + 100
+    
+    rotations = [None, Image.ROTATE_90, Image.ROTATE_180, Image.ROTATE_270]
+    for f in files:
+        id = int(''.join(filter(str.isdigit, f)))
+        image_to_rep = Image.open(image_dir + f)
+        gt_to_rep = Image.open(gt_dir + f)
+        for r in rotations:
+            rotate_and_flip(image_to_rep, r, image_dir, id)
+            id = rotate_and_flip(gt_to_rep, r, gt_dir, id)
 
 def main(argv=None):  # pylint: disable=unused-argument
 
@@ -199,6 +216,12 @@ def main(argv=None):  # pylint: disable=unused-argument
     train_data_filename = data_dir + 'images/'
     train_labels_filename = data_dir + 'groundtruth/'
     submission_data_dir = 'test_set_images/'
+    
+    # Create rotated/symetrical images, if not already existing
+    files = os.listdir(train_data_filename)
+    if len(files) == 100:
+        print('Creating rotated and symetrical images...')
+        expand_image_set(train_data_filename, train_labels_filename, files)
 
     # Extract it into numpy arrays.
     train_data = extract_data(train_data_filename, TRAINING_SIZE)
@@ -509,9 +532,9 @@ def main(argv=None):  # pylint: disable=unused-argument
                             [optimizer, loss, learning_rate, train_prediction],
                             feed_dict=feed_dict)
 
-                # Save the variables to disk.
-                save_path = saver.save(s, FLAGS.train_dir + "/model.ckpt")
-                print("Model saved in file: %s" % save_path)
+            # Save the variables to disk.
+            save_path = saver.save(s, FLAGS.train_dir + "/model.ckpt")
+            print("Model saved in file: %s" % save_path)
 
         print("Running prediction on training set")
         prediction_training_dir = "predictions_training/"
