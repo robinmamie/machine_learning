@@ -216,10 +216,10 @@ def main(argv=None):  # pylint: disable=unused-argument
     train_data_filename = data_dir + 'images/'
     train_labels_filename = data_dir + 'groundtruth/'
     submission_data_dir = 'test_set_images/'
-    
+
     # Create rotated/symetrical images, if not already existing
     files = os.listdir(train_data_filename)
-    if len(files) == 100:
+    if len(files) != 800:
         print('Creating rotated and symetrical images...')
         expand_image_set(train_data_filename, train_labels_filename, files)
 
