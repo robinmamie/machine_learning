@@ -1,4 +1,5 @@
 # Folders
+checkpoints/
 Datasets/
 predictions_*/
 test_set_images/
