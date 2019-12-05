@@ -3,10 +3,13 @@ checkpoints/
 Datasets/
 predictions_*/
 test_set_images/
-training/
+training/*
+checkpoint
+logs/*
 
 # Debug from tf_v2_upgrade.sh
 report.txt
 
 # Our submissions
 submission-*.csv
+
