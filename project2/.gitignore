@@ -4,6 +4,7 @@ Datasets/
 predictions_*/
 test_set_images/
 training/*
+training_*
 checkpoint
 logs/*
 
@@ -13,3 +14,5 @@ report.txt
 # Our submissions
 submission-*.csv
 
+# Tensor Flow
+road_segmentation_model.h5
