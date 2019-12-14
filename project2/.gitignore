@@ -1,4 +1,5 @@
 # Folders
+.vscode
 augmented_set
 checkpoints/
 Datasets/
