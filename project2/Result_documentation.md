@@ -99,7 +99,7 @@ With Robin's run with to following settings:
 
 ```
 50 epochs
-batch size 4 #cannot go higher due to memory requirements
+batch size 1
 10'000 images
 split 0.1
 Training time required on our PC: 9h30
