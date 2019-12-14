@@ -90,7 +90,7 @@ ____
 
 foreground_threshold = 0.40
 
-F1 = 0.905 Secondary = 0.949
+***F1 = 0.905 Secondary = 0.949***
 
 
 ## UNet++ DeepSupervision
