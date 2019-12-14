@@ -53,9 +53,16 @@ AIcowd = 0.875 F1	-> 0.933 Secondary
 
 
 ## UNet++
-
+```
+50 epochs
+batch size 4
+10'000 images
+split 0.1
+best_threshold 0.506
+Training time required on our PC: 8h20
+```
 ____
-50 epochs, batch size 4, 10'000 images, split 0.1, best_threshold = 0.506 F1 = 0.888, secondary 0.937
+ F1 = 0.888, secondary 0.937
 
 ______
 Same model but without best threshold. Using AI_crowd submision creation with parameter 
@@ -92,9 +99,10 @@ With Robin's run with to following settings:
 
 ```
 50 epochs
-batch size 4
+batch size 4 #cannot go higher due to memory requirements
 10'000 images
 split 0.1
+Training time required on our PC: 9h30
 ```
 
 ```
