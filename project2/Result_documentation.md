@@ -55,7 +55,7 @@ AIcowd = 0.875 F1	-> 0.933 Secondary
 ## UNet++
 ```
 50 epochs
-batch size 4
+batch size 1
 10'000 images
 split 0.1
 best_threshold 0.506
