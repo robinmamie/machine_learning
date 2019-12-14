@@ -16,6 +16,10 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing.image import img_to_array
 from keras.preprocessing.image import load_img
 from keras import backend as K
+
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import math_ops
+
 from PIL import Image
 from skimage.io import imread, imshow
 from skimage.transform import resize
@@ -148,6 +152,19 @@ def main(epochs):
         else:
             Y[n] = mask
 
+    #Custom loss function
+    def dice_coef(y_true, y_pred):
+        y_pred = ops.convert_to_tensor(y_pred)
+        y_true = math_ops.cast(y_true, y_pred.dtype)
+        smooth = 1.
+        y_true_f = K.flatten(y_true)
+        y_pred_f = K.flatten(y_pred)
+        intersection = K.sum(y_true_f * y_pred_f)
+        return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+    
+    def bce_dice_loss(y_true, y_pred):
+        return tf.keras.losses.binary_crossentropy(y_true, y_pred) + dice_coef(y_true, y_pred)
+
     # Build U-Net++ model
     inputs = tf.keras.layers.Input((IMG_HEIGHT, IMG_WIDTH,+ IMG_CHANNELS))
     s = tf.keras.layers.Lambda(lambda x: x / 255)(inputs)
@@ -254,7 +271,7 @@ def main(epochs):
     output_d6 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d6)
 
     model = tf.keras.Model(inputs=[inputs], outputs=[outputs, output_d4, output_d5, output_d6])   
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy', 'binary_accuracy', 'categorical_accuracy'])
+    model.compile(optimizer='adam', loss=bce_dice_loss, metrics=['binary_accuracy'])
     model.summary()
 
     if USE_SAVED_MODEL:
