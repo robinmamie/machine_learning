@@ -122,3 +122,20 @@ ____
 ## UNet (same as try 1)
 No thresholding on the prediction image generation.
 Using thresholding on submission generation F1 -> 0.904
+0.37
+Best threshold is **0.37**
+
+____
+## UNet++ DeepSupervision with diceLoss
+```
+# best foreground_threshold:
+NUMBERS_OF_IMAGES_TO_USE = 50
+MIN_FOREGROUND_VALUE = 0.30
+MAX_FOREGOURND_VALUE = 0.70
+STEP = 0.01
+```
+
+
+F1 0.819, secondary : 0.901
+best foreground_threshold value : 0.5400000000000003
+Given best threshold average number of missclasified tiles : 62.64
