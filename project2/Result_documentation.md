@@ -112,6 +112,13 @@ Given best threshold average number of missclasified tiles : 11.52
 
 F1 : 0.902	Secondary 0.946
 
+___
+
+(Strange : to check that images was good)
+foreground_threshold = 0.4
+Postprocessing with convolution
+
+F1 = 0.901 Secondary = 0.948
 
 ## UNet++ DeepSupervision
 
