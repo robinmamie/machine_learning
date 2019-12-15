@@ -115,5 +115,5 @@ STEP = 0.01
  
  Best threshold is **0.40**
  
- 
+ F1 score -> 0.888 Secondary -> 0.941
 
