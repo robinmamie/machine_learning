@@ -117,3 +117,8 @@ STEP = 0.01
  
  F1 score -> 0.888 Secondary -> 0.941
 
+____
+
+## UNet (same as try 1)
+No thresholding on the prediction image generation.
+Using thresholding on submission generation F1 -> 0.904
