@@ -93,6 +93,21 @@ foreground_threshold = 0.40
 ***F1 = 0.905 Secondary = 0.949***
 
 
+___
+best foreground_threshold value : 0.378
+
+Given best threshold average number of missclasified tiles : 11.5
+
+F1: 0.904	Secondary: 0.948
+
+__
+best foreground_threshold value : 0.347
+
+Given best threshold average number of missclasified tiles : 11.52
+
+F1 : 0.902	Secondary 0.946
+
+
 ## UNet++ DeepSupervision
 
 With Robin's run with to following settings:
