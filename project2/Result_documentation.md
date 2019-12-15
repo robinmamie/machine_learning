@@ -174,6 +174,8 @@ MAX_FOREGOURND_VALUE = 0.70
 STEP = 0.01
 ```
 
+The contrast of the predicted images was verry low so we applied a linear scalling to the values to get them between 0 and 1.
+
 **Threshold to the accuracy of 0.01**
 
 F1 0.819, secondary : 0.901
