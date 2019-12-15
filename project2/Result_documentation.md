@@ -100,7 +100,7 @@ Given best threshold average number of missclasified tiles : 11.5
 
 F1: 0.904	Secondary: 0.948
 
-__
+___
 best foreground_threshold value : 0.347
 
 Given best threshold average number of missclasified tiles : 11.52
