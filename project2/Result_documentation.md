@@ -128,6 +128,14 @@ Best threshold is **0.37**
 ____
 ## UNet++ DeepSupervision with diceLoss
 ```
+ Batch size 1
+ 10'000 images
+ 50 epochs
+ split 0.1
+ Training time required on our PC: 9h30
+```
+
+```
 # best foreground_threshold:
 NUMBERS_OF_IMAGES_TO_USE = 50
 MIN_FOREGROUND_VALUE = 0.30
