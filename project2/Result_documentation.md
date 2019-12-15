@@ -137,5 +137,7 @@ STEP = 0.01
 
 
 F1 0.819, secondary : 0.901
+
 best foreground_threshold value : 0.5400000000000003
+
 Given best threshold average number of missclasified tiles : 62.64
