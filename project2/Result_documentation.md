@@ -122,9 +122,20 @@ ____
 ## UNet (same as try 1)
 No thresholding on the prediction image generation.
 Using thresholding on submission generation F1 -> 0.904
-0.37
+
+**Threshold to the accuracy of 0.01**
+
 Best threshold is **0.37**
 
+Using thresholding on submission generation F1 -> 0.904
+
+**Threshold to the accuracy of 0.001**
+
+
+best foreground_threshold value : 0.358
+Given best threshold average number of missclasified tiles : 9.96
+
+F1 : 0.905	Secondary :0.950
 ____
 ## UNet++ DeepSupervision with diceLoss
 ```
@@ -143,9 +154,16 @@ MAX_FOREGOURND_VALUE = 0.70
 STEP = 0.01
 ```
 
+**Threshold to the accuracy of 0.01**
 
 F1 0.819, secondary : 0.901
 
 best foreground_threshold value : 0.5400000000000003
 
 Given best threshold average number of missclasified tiles : 62.64
+
+**Threshold to the accuracy of 0.001**
+best foreground_threshold value : 0.535
+Given best threshold average number of missclasified tiles : 58.29
+
+F1 0.820	Secondary 0.901
