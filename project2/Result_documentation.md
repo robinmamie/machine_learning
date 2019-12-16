@@ -55,7 +55,7 @@ AIcowd = 0.875 F1	-> 0.933 Secondary
 ## UNet++
 ```
 50 epochs
-batch size 1
+batch size 4
 10'000 images
 split 0.1
 best_threshold 0.506
@@ -111,6 +111,19 @@ best foreground_threshold value : 0.347
 Given best threshold average number of missclasified tiles : 11.52
 
 F1 : 0.902	Secondary 0.946
+
+## UNet++
+```
+100 epochs
+batch size 4
+10'000 images
+split 0.1
+best_threshold 0.506
+Training time required on our PC: 8h20
+```
+Best threshold: 0.40
+Missclasified tiles : 10.03
+F1:AIcrowd -> 0.906
 
 
 ## UNet++ DeepSupervision
