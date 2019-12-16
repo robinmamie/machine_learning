@@ -58,7 +58,6 @@ AIcowd = 0.875 F1	-> 0.933 Secondary
 batch size 4
 10'000 images
 split 0.1
-best_threshold 0.506
 Training time required on our PC: 8h20
 ```
 ____
