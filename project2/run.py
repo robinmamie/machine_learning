@@ -137,30 +137,35 @@ def generate_images(number_to_generate):
             horizontal_flip=True,
             fill_mode="reflect"
         )
+        # Define Python generators
+        imageGen = aug.flow(
+            image,
+            y=truth,
+            batch_size=1,
+            save_to_dir=OUTPUT_DATA_IMAGE_PATH + "images",
+            save_prefix=img.split(".")[0],
+            save_format="png",
+            seed = SEED
+        )
+        truthGen = aug.flow(
+            truth,
+            y=truth,
+            batch_size=1,
+            save_to_dir=OUTPUT_DATA_IMAGE_PATH + "groundtruth",
+            save_prefix=img.split(".")[0],
+            save_format="png",
+            seed = SEED
+        )
         total = 0
-
-        # construct the actual Python generator
-        imageGen = aug.flow(image, y=truth, batch_size=1, save_to_dir=OUTPUT_DATA_IMAGE_PATH + "images",
-        save_prefix=img.split(".")[0], save_format="png", seed = SEED )
-        truthGen = aug.flow(truth, y=truth, batch_size=1, save_to_dir=OUTPUT_DATA_IMAGE_PATH + "groundtruth",
-        save_prefix=img.split(".")[0], save_format="png", seed = SEED )
-        # loop over examples from our image data augmentation generator
+        # Loop over examples from our image data augmentation generator
         for image in imageGen:
-            # increment our counter
             total += 1
-
-            # if we have reached the specified number of examples, break
-            # from the loop
             if total == number_to_generate:
+                # If enough were generated, break out of the loop
                 break
-
         total = 0
         for image in truthGen:
-            # increment our counter
             total += 1
-
-            # if we have reached the specified number of examples, break
-            # from the loop
             if total == number_to_generate:
                 break
 
@@ -173,106 +178,144 @@ def update_path_train_set():
     IMAGES_FILENAMES = os.listdir(IMAGE_DATA_PATH)
     print("[INFO] There are " + str(len(IMAGES_FILENAMES)) + " found")
 
-def build_model(type):
-
-    # Build U-Net++ model
+def build_unet_model(type):
     inputs = tf.keras.layers.Input((IMG_HEIGHT, IMG_WIDTH,+ IMG_CHANNELS))
     s = tf.keras.layers.Lambda(lambda x: x / 255)(inputs)
     
-    c1 = tf.keras.layers.Conv2D(16, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(s)
+    c1 = tf.keras.layers.Conv2D(
+        16, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(s)
     c1 = tf.keras.layers.Dropout(0.1)(c1)
-    c1 = tf.keras.layers.Conv2D(16, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(c1)
+    c1 = tf.keras.layers.Conv2D(
+        16, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(c1)
     p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1)
     
-    c2 = tf.keras.layers.Conv2D(32, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(p1)
+    c2 = tf.keras.layers.Conv2D(
+        32, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(p1)
     c2 = tf.keras.layers.Dropout(0.1)(c2)
-    c2 = tf.keras.layers.Conv2D(32, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(c2)
+    c2 = tf.keras.layers.Conv2D(
+        32, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(c2)
     p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2)
     
-    c3 = tf.keras.layers.Conv2D(64, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(p2)
+    c3 = tf.keras.layers.Conv2D(
+        64, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(p2)
     c3 = tf.keras.layers.Dropout(0.2)(c3)
-    c3 = tf.keras.layers.Conv2D(64, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(c3)
+    c3 = tf.keras.layers.Conv2D(
+        64, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(c3)
     p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3)
     
-    c4 = tf.keras.layers.Conv2D(128, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(p3)
+    c4 = tf.keras.layers.Conv2D(
+        128, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(p3)
     c4 = tf.keras.layers.Dropout(0.2)(c4)
-    c4 = tf.keras.layers.Conv2D(128, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(c4)
+    c4 = tf.keras.layers.Conv2D(
+        128, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(c4)
     p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4)
     
-    c5 = tf.keras.layers.Conv2D(256, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(p4)
+    c5 = tf.keras.layers.Conv2D(
+        256, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(p4)
     c5 = tf.keras.layers.Dropout(0.3)(c5)
-    c5 = tf.keras.layers.Conv2D(256, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(c5)
+    c5 = tf.keras.layers.Conv2D(
+        256, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(c5)
     
-    u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
+    u6 = tf.keras.layers.Conv2DTranspose(
+        128, (2, 2), strides=(2, 2), padding='same')(c5)
     u6 = tf.keras.layers.concatenate([u6, c4])
-    c6 = tf.keras.layers.Conv2D(128, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(u6)
+    c6 = tf.keras.layers.Conv2D(
+        128, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(u6)
     c6 = tf.keras.layers.Dropout(0.2)(c6)
-    c6 = tf.keras.layers.Conv2D(128, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(c6)
+    c6 = tf.keras.layers.Conv2D(
+        128, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(c6)
     
-    u7 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6)
+    u7 = tf.keras.layers.Conv2DTranspose(
+        64, (2, 2), strides=(2, 2), padding='same')(c6)
+    if type > 0:
+        d_u1 = tf.keras.layers.Conv2DTranspose(
+            64, (2, 2), strides=(2, 2), padding='same')(c4)
+        d1 = tf.keras.layers.concatenate([d_u1, c3])
+        d1 = tf.keras.layers.Dense(
+            64, activation=tf.keras.activations.relu)(d1)
+        u7 = tf.keras.layers.concatenate([u7, d1])
+    else:
+        u7 = tf.keras.layers.concatenate([u7, c3])
 
-    # One DenseNet Node
-    d_u1 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c4)
-    d1 = tf.keras.layers.concatenate([d_u1, c3])
-    d1 = tf.keras.layers.Dense(64, activation='relu')(d1)
-
-    u7 = tf.keras.layers.concatenate([u7, d1])
-    c7 = tf.keras.layers.Conv2D(64, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(u7)
+    c7 = tf.keras.layers.Conv2D(
+        64, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(u7)
     c7 = tf.keras.layers.Dropout(0.2)(c7)
-    c7 = tf.keras.layers.Conv2D(64, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(c7)
+    c7 = tf.keras.layers.Conv2D(
+        64, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(c7)
 
-    d_u2 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c3)
-    d2 = tf.keras.layers.concatenate([d_u2, c2])
-    d2 = tf.keras.layers.Dense(128, activation=tf.keras.activations.relu)(d2)
+    u8 = tf.keras.layers.Conv2DTranspose(
+        32, (2, 2), strides=(2, 2), padding='same')(c7)
+    if type > 0:
+        d_u2 = tf.keras.layers.Conv2DTranspose(
+            32, (2, 2), strides=(2, 2), padding='same')(c3)
+        d2 = tf.keras.layers.concatenate([d_u2, c2])
+        d2 = tf.keras.layers.Dense(
+            128, activation=tf.keras.activations.relu)(d2)
 
-    d_u3 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(d1)
-    d3 = tf.keras.layers.concatenate([d_u3, d2, c2])
-    d3 = tf.keras.layers.Dense(128, activation=tf.keras.activations.relu)(d3)
+        d_u3 = tf.keras.layers.Conv2DTranspose(
+            32, (2, 2), strides=(2, 2), padding='same')(d1)
+        d3 = tf.keras.layers.concatenate([d_u3, d2, c2])
+        d3 = tf.keras.layers.Dense(
+            128, activation=tf.keras.activations.relu)(d3)
 
+        u8 = tf.keras.layers.concatenate([u8, d3])
+    else:
+        u8 = tf.keras.layers.concatenate([u8, c2])
 
-    u8 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7)
-    u8 = tf.keras.layers.concatenate([u8, d3])
-    c8 = tf.keras.layers.Conv2D(32, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(u8)
+    c8 = tf.keras.layers.Conv2D(
+        32, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(u8)
     c8 = tf.keras.layers.Dropout(0.1)(c8)
-    c8 = tf.keras.layers.Conv2D(32, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(c8)
+    c8 = tf.keras.layers.Conv2D(
+        32, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(c8)
 
+    u9 = tf.keras.layers.Conv2DTranspose(
+        16, (2, 2), strides=(2, 2), padding='same')(c8)
+    if type > 0:
+        d_uc2 = tf.keras.layers.Conv2DTranspose(
+            16, (2, 2), strides=(2, 2), padding='same')(c2)
+        d4 = tf.keras.layers.concatenate([d_uc2, c1])
+        d4 = tf.keras.layers.Dense(
+            256, activation=tf.keras.activations.relu)(d4)
 
-    d_uc2 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c2)
-    d4 = tf.keras.layers.concatenate([d_uc2, c1])
-    d4 = tf.keras.layers.Dense(256, activation=tf.keras.activations.relu)(d4)
+        d_ud2 = tf.keras.layers.Conv2DTranspose(
+            16, (2, 2), strides=(2, 2), padding='same')(d2)
+        d5 = tf.keras.layers.concatenate([d_ud2, d4, c1])
+        d5 = tf.keras.layers.Dense(
+            256, activation=tf.keras.activations.relu)(d5)
 
-    d_ud2 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(d2)
-    d5 = tf.keras.layers.concatenate([d_ud2, d4, c1])
-    d5 = tf.keras.layers.Dense(256, activation=tf.keras.activations.relu)(d5)
+        d_ud3 = tf.keras.layers.Conv2DTranspose(
+            16, (2, 2), strides=(2, 2), padding='same')(d3)
+        d6 = tf.keras.layers.concatenate([d_ud3, d5, c1])
+        d6 = tf.keras.layers.Dense(
+            256, activation=tf.keras.activations.relu)(d6)
+        u9 = tf.keras.layers.concatenate([u9, d6], axis=3)
+    else:
+        u9 = tf.keras.layers.concatenate([u9, c1], axis=3)
 
-    d_ud3 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(d3)
-    d6 = tf.keras.layers.concatenate([d_ud3, d5, c1])
-    d6 = tf.keras.layers.Dense(256, activation=tf.keras.activations.relu)(d6)
-
-    u9 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8)
-    u9 = tf.keras.layers.concatenate([u9, d6], axis=3)
-    c9 = tf.keras.layers.Conv2D(16, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(u9)
+    c9 = tf.keras.layers.Conv2D(
+        16, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(u9)
     c9 = tf.keras.layers.Dropout(0.1)(c9)
-    c9 = tf.keras.layers.Conv2D(16, (3, 3), activation=tf.keras.activations.relu, kernel_initializer='he_normal',
-                                padding='same')(c9)
-    
+    c9 = tf.keras.layers.Conv2D(
+        16, (3, 3), activation=tf.keras.activations.relu,
+        kernel_initializer='he_normal', padding='same')(c9)
+
     outputs = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
 
     model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
@@ -418,7 +461,7 @@ def main():
     if args.augmented_set:
         update_path_train_set()
 
-    model = build_model(args.model)
+    model = build_unet_model(args.model)
 
     if args.load:
         load_model(model)
