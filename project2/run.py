@@ -404,7 +404,7 @@ def train(model, epochs, is_generated, type):
     model.save_weights(MODEL_SAVE_LOCATION, overwrite=True)
     gc.collect()
 
-def compute_best_threshold(model, X, Y):
+def compute_best_threshold(model, X, Y, type):
     # best foreground_threshold: missclasified tiles count
     NUMBERS_OF_IMAGES_TO_USE = 100      # This is the number of images to use durring the calculation.
     MIN_FOREGROUND_VALUE = 0.30 #included
@@ -452,7 +452,7 @@ def compute_best_threshold(model, X, Y):
     print(f'Given best threshold average number of missclasified tiles : {np.min(number_of_pixels_off)}')
     return best_threshold
 
-def predict(model):
+def predict(model, type):
     def img_float_to_uint8(img):
         rimg = img - np.min(img)
         rimg = (rimg / np.max(rimg) * PIXEL_DEPTH).round().astype(np.uint8)
@@ -558,13 +558,14 @@ def main():
 
     if args.threshold:
         # TODO create validation set
-        best_threshold = compute_best_threshold()
+        best_threshold = compute_best_threshold(
+            model, X=[], Y=[], type=args.model)
         pass
     else:
         best_threshold = 0.4
 
     if args.predict:
-        predict(model)
+        predict(model, args.model)
     else:
         print("[INFO] Skipping predicting test images")
 
