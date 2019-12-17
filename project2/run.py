@@ -54,6 +54,12 @@ def parse_flags():
         Road Segmentation 2019 Challenge. The default behaviour loads our best
         model and creates its AICrowd submission.""")
     parser.add_argument(
+        '--rtx',
+        dest='rtx',
+        action='store_true',
+        help='Allow memory growth for RTX GPUs',
+    )
+    parser.add_argument(
         '-generate',
         metavar='number',
         dest='generate',
