@@ -346,10 +346,13 @@ def build_unet_model(type):
         output_d4 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d4)
         output_d5 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d5)
         output_d6 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d6)
+        model = tf.keras.Model(inputs=[inputs], outputs=[outputs, output_d4, output_d5, output_d6])
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    else:
+        model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
+        loss = bce_dice_loss if type == 3 else 'binary_crossentropy'
+        model.compile(optimizer='adam', loss=loss, metrics=['accuracy', 'binary_accuracy', 'categorical_accuracy'])
 
-    model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
-    loss = bce_dice_loss if type == 3 else 'binary_crossentropy'
-    model.compile(optimizer='adam', loss=loss, metrics=['accuracy'])
     model.summary()
     return model
 
