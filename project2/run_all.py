@@ -64,7 +64,7 @@ def main(epochs):
     # Image generation
     GENERATE_NEW_IMG   = False
     USE_GENERATED_IMG  = True
-    IMG_TO_GEN_PER_IMG = 100
+    IMG_TO_GEN_PER_IMG = 200
 
     # Load existing model
     USE_SAVED_MODEL = True
