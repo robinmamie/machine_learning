@@ -15,6 +15,9 @@ from itertools import chain
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing.image import img_to_array
 from keras.preprocessing.image import load_img
+from keras import backend as K
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import math_ops
 
 from PIL import Image
 from skimage.io import imread, imshow
@@ -53,12 +56,6 @@ def parse_flags():
     parser = ap.ArgumentParser(description="""Prediction runner for the EPFL ML
         Road Segmentation 2019 Challenge. The default behaviour loads our best
         model and creates its AICrowd submission.""")
-    parser.add_argument(
-        '--rtx',
-        dest='rtx',
-        action='store_true',
-        help='Allow memory growth for RTX GPUs',
-    )
     parser.add_argument(
         '-generate',
         metavar='number',
@@ -99,6 +96,13 @@ def parse_flags():
         default=0,
     )
     parser.add_argument(
+        '--search-threshold',
+        dest='threshold',
+        action='store_true',
+        help='Search the best threshold on a validation set (default False)',
+        default=0,
+    )
+    parser.add_argument(
         '--no-predict',
         dest='predict',
         action='store_false',
@@ -109,6 +113,12 @@ def parse_flags():
         dest='aicrowd',
         action='store_false',
         help='Do not generate file for AICrowd submission (default True)',
+    )
+    parser.add_argument(
+        '--rtx',
+        dest='rtx',
+        action='store_true',
+        help='Allow memory growth for RTX GPUs (default False)',
     )
     args = parser.parse_args()
     # TODO test incorrect (negative) values
@@ -180,6 +190,19 @@ def update_path_train_set():
     print("[INFO] There are " + str(len(IMAGES_FILENAMES)) + " found")
 
 def build_unet_model(type):
+
+    def dice_coef(y_true, y_pred):
+        y_pred = ops.convert_to_tensor(y_pred)
+        y_true = math_ops.cast(y_true, y_pred.dtype)
+        smooth = 1.
+        y_true_f = K.flatten(y_true)
+        y_pred_f = K.flatten(y_pred)
+        intersection = K.sum(y_true_f * y_pred_f)
+        return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+        
+    def bce_dice_loss(y_true, y_pred):
+        return tf.keras.losses.binary_crossentropy(y_true, y_pred) + dice_coef(y_true, y_pred)
+
     inputs = tf.keras.layers.Input((IMG_HEIGHT, IMG_WIDTH,+ IMG_CHANNELS))
     s = tf.keras.layers.Lambda(lambda x: x / 255)(inputs)
     
@@ -319,8 +342,14 @@ def build_unet_model(type):
 
     outputs = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
 
+    if type > 1:
+        output_d4 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d4)
+        output_d5 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d5)
+        output_d6 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d6)
+
     model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    loss = bce_dice_loss if type == 3 else 'binary_crossentropy'
+    model.compile(optimizer='adam', loss=loss, metrics=['accuracy'])
     model.summary()
     return model
 
@@ -332,7 +361,7 @@ def load_model(model):
         print("""[ERROR] Could not locate file for model weights. Proceding
             without loading weights.""")
 
-def train(model, epochs, is_generated):
+def train(model, epochs, is_generated, type):
     print("[INFO] Loading images into RAM", flush = True)
     X = np.zeros((len(IMAGES_FILENAMES), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
     Y = np.zeros((len(IMAGES_FILENAMES), IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool)
@@ -363,10 +392,60 @@ def train(model, epochs, is_generated):
     gc.collect()
 
     print("[INFO] Training model")
-    model.fit(X, Y, validation_split=0.1, batch_size=4, epochs=epochs, callbacks=callbacks, shuffle=True)
+    if type > 1:
+        Yp = [Y,Y,Y,Y]
+    else:
+        Yp = Y
+    model.fit(X, Yp, validation_split=0.1, batch_size=4, epochs=epochs,
+              callbacks=callbacks, shuffle=True)
     model.save_weights(MODEL_SAVE_LOCATION, overwrite=True)
-
     gc.collect()
+
+def compute_best_threshold(model, X, Y):
+    # best foreground_threshold: missclasified tiles count
+    NUMBERS_OF_IMAGES_TO_USE = 100      # This is the number of images to use durring the calculation.
+    MIN_FOREGROUND_VALUE = 0.30 #included
+    MAX_FOREGOURND_VALUE = 0.38   #included
+    STEP = 0.001
+
+    # assign a label to a patch
+    def patch_to_label(patch, fg):
+        df = np.mean(patch)
+        if df > fg:
+            return 1
+        else:
+            return 0
+
+    def mask_to_submission_strings(im, fg):
+        patch_size = 16
+        mask = np.zeros((im.shape[1]//patch_size, im.shape[0]//patch_size))
+        for j in range(0, im.shape[1], patch_size):
+            for i in range(0, im.shape[0], patch_size):
+                patch = im[i:i + patch_size, j:j + patch_size]
+                mask[i//patch_size, j//patch_size] = patch_to_label(patch, fg)
+        return mask
+
+    def get_prediction(img, fg):
+        x=np.array(img)
+        x=np.expand_dims(x, axis=0)
+        predict = model.predict(x, verbose=0)[0]
+        predict = (predict - predict.min())/(predict.max() - predict.min())
+        predict = np.squeeze(predict)
+        return mask_to_submission_strings(predict, fg)
+
+
+    number_of_pixels_off = []  #average number of missclasified images
+    fg_values =  np.arange(MIN_FOREGROUND_VALUE,MAX_FOREGOURND_VALUE+STEP,STEP)
+    for idx, fg in tqdm(enumerate(fg_values), total= len(fg_values)):
+        total = 0
+        for idx in range(NUMBERS_OF_IMAGES_TO_USE):
+            prediction = get_prediction(X[idx], fg)
+            total += np.abs(prediction - mask_to_submission_strings(np.squeeze(Y[idx]), fg)).sum()
+        number_of_pixels_off.append( total / NUMBERS_OF_IMAGES_TO_USE)
+    best_threshold = fg_values[np.argmin(number_of_pixels_off)]
+    print( f'best foreground_threshold value : {best_threshold}')
+    print(f'Given best threshold average number of missclasified tiles : {np.min(number_of_pixels_off)}')
+    return best_threshold
 
 def predict(model):
     def img_float_to_uint8(img):
@@ -383,15 +462,14 @@ def predict(model):
         predictions.append(predict_img_with_smooth_windowing(
             pimg,
             window_size=IMG_WIDTH,
-            subdivisions=2,  # Minimal amount of overlap for windowing.
+            subdivisions=2,  # Minimal amount of overlap for windowing
             nb_classes=1,
                 pred_func=(
                     lambda img_batch_subdiv: model.predict(img_batch_subdiv)
                 )
             )
         )
-    
-    best_threshold = 0.51 # TODO Jeremy's thresholding
+
     print("[INFO] Writing prediction to drive")
     pred = np.array(predictions.copy())
     for i in range(1, 51):
@@ -399,17 +477,15 @@ def predict(model):
         w = pimg.shape[0]
         h = pimg.shape[1]
         cimg = np.zeros((w, h, 3), dtype=np.uint8)
-        pimg = (pimg > best_threshold).astype(np.uint8)
+        pimg *= 255
+        pimg = pimg.astype(np.uint8)
         pimg8 = np.squeeze(img_float_to_uint8(pimg))
         cimg[:, :, 0] = pimg8
         cimg[:, :, 1] = pimg8
         cimg[:, :, 2] = pimg8
         Image.fromarray(cimg).save(PREDICTION_SUBMISSION_DIR + f"gt_{i}.png")
 
-def predict_aicrowd():
-    # Creating ouput for submission
-    foreground_threshold = 0.25 # percentage of pixels > 1 required to assign a foreground label to a patch
-
+def predict_aicrowd(foreground_threshold):
     # assign a label to a patch
     def patch_to_label(patch):
         df = np.mean(patch)
@@ -468,17 +544,27 @@ def main():
         load_model(model)
 
     if args.epochs > 0:
-        train(model, epochs=args.epochs, is_generated=args.augmented_set)
+        train(
+            model,
+            epochs=args.epochs,
+            is_generated=args.augmented_set,
+            type=args.model,
+        )
+
+    if args.threshold:
+        # TODO create validation set
+        best_threshold = compute_best_threshold()
+        pass
+    else:
+        best_threshold = 0.4
 
     if args.predict:
         predict(model)
     else:
         print("[INFO] Skipping predicting test images")
 
-    # TODO (?) Define optimum threshold
-
     if args.aicrowd:
-        predict_aicrowd()
+        predict_aicrowd(best_threshold)
     else:
         print("[INFO] Skipping prediction for AICrowd")
 
