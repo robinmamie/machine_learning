@@ -64,7 +64,7 @@ def parse_flags():
         metavar='number',
         dest='generate',
         type=int,
-        nargs=1,
+        nargs='?',
         help='Number of images to generate per train set image (default 0)',
         default=0,
     )
@@ -79,7 +79,7 @@ def parse_flags():
         metavar='number',
         dest='model',
         type=int,
-        nargs=1,
+        nargs='?',
         help='Number of the model to use (default 1)',
         default=1,
     )
@@ -94,7 +94,7 @@ def parse_flags():
         metavar='epochs',
         dest='epochs',
         type=int,
-        nargs=1,
+        nargs='?',
         help='Number of epochs to train the neural network with (default 0)',
         default=0,
     )
