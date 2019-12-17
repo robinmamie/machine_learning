@@ -81,6 +81,7 @@ def parse_flags():
         type=int,
         nargs=1,
         help='Number of the model to use (default 1)',
+        default=1,
     )
     parser.add_argument(
         '--no-load',
