@@ -431,7 +431,9 @@ def compute_best_threshold(model, X, Y):
     def get_prediction(img, fg):
         x=np.array(img)
         x=np.expand_dims(x, axis=0)
-        predict = model.predict(x, verbose=0)[0]
+        predict = model.predict(x, verbose=0)
+        if type > 2:
+            predict = predict[0]
         predict = (predict - predict.min())/(predict.max() - predict.min())
         predict = np.squeeze(predict)
         return mask_to_submission_strings(predict, fg)
@@ -468,7 +470,7 @@ def predict(model):
             subdivisions=2,  # Minimal amount of overlap for windowing
             nb_classes=1,
                 pred_func=(
-                    lambda img_batch_subdiv: model.predict(img_batch_subdiv)
+                    lambda img_batch_subdiv: model.predict(img_batch_subdiv) if type < 2 else model.predict(x, verbose=0)[0]
                 )
             )
         )

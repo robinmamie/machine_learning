@@ -7,7 +7,7 @@ The file `requirements.txt` contains all required libraries to run our project.
 ## Folder structure
 
     .
-    ├── augmented_set
+    ├── augmented_set                # Created with the provided script
     │   ├── groundtruth
     │   └── images
     ├── checkpoints                  # Created to save training checkpoints
@@ -20,7 +20,7 @@ The file `requirements.txt` contains all required libraries to run our project.
     │   ├── test_1.png
     │   ├── ...
     │   └── test_50.png
-    ├── training
+    ├── training                    # Folder created by unzipping training.zip
     │   ├── groundtruth
     │   └── images
     ├── README.md
