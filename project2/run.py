@@ -470,7 +470,7 @@ def predict(model, type):
             subdivisions=2,  # Minimal amount of overlap for windowing
             nb_classes=1,
                 pred_func=(
-                    lambda img_batch_subdiv: model.predict(img_batch_subdiv) if type < 2 else model.predict(x, verbose=0)[0]
+                    lambda img_batch_subdiv: model.predict(img_batch_subdiv) if type < 2 else model.predict(img_batch_subdiv)[0]
                 )
             )
         )
