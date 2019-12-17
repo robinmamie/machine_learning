@@ -91,9 +91,10 @@ def parse_flags():
     parser.add_argument(
         '-train',
         metavar='epochs',
+        dest='epochs',
         type=int,
         nargs=1,
-        help='Number of epochs to train the neural network with (defualt 0)',
+        help='Number of epochs to train the neural network with (default 0)',
         default=0,
     )
     parser.add_argument(
