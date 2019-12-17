@@ -1,31 +1,27 @@
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import numpy as np
-import tensorflow as tf
-
 import argparse as ap
 import datetime
 import gc
+import matplotlib.image as mpimg
+import numpy as np
 import os
 import random
 import re
-import sys
+import tensorflow as tf
 
 from itertools import chain
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing.image import img_to_array
 from keras.preprocessing.image import load_img
 from keras import backend as K
+from PIL import Image
+from skimage.io import imread
+from skimage.transform import resize
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import math_ops
-
-from PIL import Image
-from skimage.io import imread, imshow
-from skimage.transform import resize
-import sklearn.metrics
-from smooth_tiled_predictions import predict_img_with_smooth_windowing
 from time import strftime
 from tqdm import tqdm
+
+from smooth_tiled_predictions import predict_img_with_smooth_windowing
 
 # Constants
 # Image definition

@@ -1,4 +1,9 @@
 # Road Segmentation Project
+#### Bastien Beuchat, Robin Mamie, Jeremy Mion
+
+Image segmentation is a computer vision process in which images are partitioned into different segments. It has a key role to play in many different fields of research. Among its concrete applications are domains such as medical imaging, machine vision and in our case dynamic map creation. Acquiring aerial photography is a cheap and efficient way of collecting information about the topography of the terrain below. In this project, we set out to create a machine learning algorithm that detects the roads out of these photographs. Automatically detecting the location and width of roads is a very powerful tool that allows map-making companies to keep their data up to date with very little cost.
+
+In this project, we explore the different possibilities by starting with a simple convolutional neural network, and ending up with one implementing UNet++ using deep supervision.
 
 ## Requirements
 
@@ -11,25 +16,35 @@ The file `requirements.txt` contains all required libraries to run our project.
     │   ├── groundtruth
     │   └── images
     ├── checkpoints                  # Created to save training checkpoints
-    ├── Datasets
-    ├── predictions_submission
+    ├── predictions_submission       # Folder where the predictions are saved
     ├── report
     │   └── ...                      # Report files
-    │   smooth_tiled_predictions.py  # External library, predict bigger images
-    ├── test_set_images
+    ├── smooth_tiled_predictions.py  # External library, predict using bigger images than training set
+    ├── test_set_images              # Folder created by unzipping test_set_images.zip and putting all the images at its root
     │   ├── test_1.png
     │   ├── ...
     │   └── test_50.png
-    ├── training                    # Folder created by unzipping training.zip
+    ├── training                     # Folder created by unzipping training.zip
     │   ├── groundtruth
     │   └── images
     ├── README.md
     ├── requirements.txt
     └── run.py
 
+## Create the best submission
+
+Simply run the following:
+
+    python run.py
+
+To create our best submission from scratch, please use the following:
+
+    python run.py -generate 100 --use-augmented-set --no-load -train 100 --search-threshold
+
 ## Flags
 
 The help message of the script shows this:
+
     usage: run.py [-h] [-generate [number]] [--use-augmented-set]
                 [-model [number]] [--no-load] [-train [epochs]]
                 [--search-threshold] [--no-predict] [--no-aicrowd] [--rtx]
@@ -55,6 +70,8 @@ The help message of the script shows this:
     --rtx                Allow memory growth for RTX GPUs (default False)
 
 ### Model number
+
+Here are the available models in the script run.py:
 
 - 0: U-Net
 - 1: U-Net++
