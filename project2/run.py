@@ -433,13 +433,13 @@ def train(model, epochs, is_generated, type):
 
 def load_validation_set():
     update_path_train_set(VALIDATION_DATA_PATH)
-    return load_images(is_generated=True)
+    return load_images(is_generated=False)
 
 def compute_best_threshold(model, X, Y, type):
     # best foreground_threshold: missclasified tiles count
     NUMBERS_OF_IMAGES_TO_USE = 100 # Number of images to classify
-    MIN_FOREGROUND_VALUE = 0.30
-    MAX_FOREGOURND_VALUE = 0.50
+    MIN_FOREGROUND_VALUE = 0.39
+    MAX_FOREGOURND_VALUE = 0.41
     STEP = 0.001
 
     # assign a label to a patch
@@ -469,7 +469,7 @@ def compute_best_threshold(model, X, Y, type):
         predict = np.squeeze(predict)
         return mask_to_submission_strings(predict, fg)
 
-
+    print('[INFO] Computing the best prediction threshold')
     number_of_pixels_off = []  #average number of missclasified images
     fg_values =  np.arange(MIN_FOREGROUND_VALUE,MAX_FOREGOURND_VALUE+STEP,STEP)
     for idx, fg in tqdm(enumerate(fg_values), total=len(fg_values)):
@@ -480,9 +480,9 @@ def compute_best_threshold(model, X, Y, type):
                 - mask_to_submission_strings(np.squeeze(Y[idx]), fg)).sum())
         number_of_pixels_off.append(total / NUMBERS_OF_IMAGES_TO_USE)
     best_threshold = fg_values[np.argmin(number_of_pixels_off)]
-    print( f'Best foreground_threshold value : {best_threshold}')
+    print(f'[INFO] Best foreground_threshold value : {best_threshold}')
     min = np.min(number_of_pixels_off)
-    print(f'Given best threshold average number of missclasified tiles : {min}')
+    print(f'[INFO] Average number of missclasified tiles : {min}')
     return best_threshold
 
 def predict(model, type):
