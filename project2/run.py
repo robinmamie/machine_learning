@@ -431,16 +431,16 @@ def train(model, epochs, is_generated, type):
     model.save_weights(MODEL_SAVE_LOCATION, overwrite=True)
     gc.collect()
 
-def load_validation_set():
-    update_path_train_set(VALIDATION_DATA_PATH)
-    return load_images(is_generated=False)
-
 def compute_best_threshold(model, X, Y, type):
     # best foreground_threshold: missclasified tiles count
     NUMBERS_OF_IMAGES_TO_USE = 100 # Number of images to classify
     MIN_FOREGROUND_VALUE = 0.39
     MAX_FOREGOURND_VALUE = 0.41
     STEP = 0.001
+
+    # Load images
+    update_path_train_set(VALIDATION_DATA_PATH)
+    X, Y = load_images(is_generated=False)
 
     # assign a label to a patch
     def patch_to_label(patch, fg):
@@ -602,9 +602,7 @@ def main():
         )
 
     if args.threshold:
-        X, Y = load_validation_set()
-        best_threshold = compute_best_threshold(
-            model, X=X, Y=Y, type=args.model)
+        best_threshold = compute_best_threshold(model, type=args.model)
     else:
         best_threshold = 0.4
 
