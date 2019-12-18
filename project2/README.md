@@ -12,6 +12,7 @@ The file `requirements.txt` contains all required libraries to run our project.
 ## Folder structure
 
     .
+    ├── archive                      # Contains different notebooks used for development
     ├── augmented_set                # Created with the provided script
     │   ├── groundtruth
     │   └── images
@@ -29,7 +30,10 @@ The file `requirements.txt` contains all required libraries to run our project.
     │   └── images
     ├── README.md
     ├── requirements.txt
-    └── run.py
+    ├── run.py                       # The main script
+    └── validation_set               # Created for dynamic thresholding
+        ├── groundtruth
+        └── images
 
 ## Create the best submission
 

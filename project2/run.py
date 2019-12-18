@@ -41,6 +41,7 @@ IMAGES_FILENAMES = os.listdir(IMAGE_DATA_PATH)
 
 # Image generation
 OUTPUT_DATA_IMAGE_PATH = 'augmented_set/'
+VALIDATION_DATA_PATH = 'validation_set/'
 
 # Checkpoints
 checkpoint_path = 'checkpoints/cp.ckpt'
@@ -120,7 +121,7 @@ def parse_flags():
     # TODO test incorrect (negative) values
     return args
 
-def generate_images(number_to_generate):
+def generate_images(number_to_generate, folder=OUTPUT_DATA_IMAGE_PATH):
     # load the input image, convert it to a NumPy array, and then
     # reshape it to have an extra dimension
     for img in tqdm(IMAGES_FILENAMES):
@@ -149,7 +150,7 @@ def generate_images(number_to_generate):
             image,
             y=truth,
             batch_size=1,
-            save_to_dir=OUTPUT_DATA_IMAGE_PATH + "images",
+            save_to_dir=folder+"images",
             save_prefix=img.split(".")[0],
             save_format="png",
             seed = SEED
@@ -158,7 +159,7 @@ def generate_images(number_to_generate):
             truth,
             y=truth,
             batch_size=1,
-            save_to_dir=OUTPUT_DATA_IMAGE_PATH + "groundtruth",
+            save_to_dir=folder+"groundtruth",
             save_prefix=img.split(".")[0],
             save_format="png",
             seed = SEED
@@ -176,10 +177,10 @@ def generate_images(number_to_generate):
             if total == number_to_generate:
                 break
 
-def update_path_train_set():
+def update_path_train_set(folder=OUTPUT_DATA_IMAGE_PATH):
     print("[INFO] Updating images_filename")
-    IMAGE_DATA_PATH = OUTPUT_DATA_IMAGE_PATH+'images/'
-    MASK_DATA_PATH = OUTPUT_DATA_IMAGE_PATH+ 'groundtruth/'
+    IMAGE_DATA_PATH = folder+'images/'
+    MASK_DATA_PATH = folder+ 'groundtruth/'
     print("[INFO] new IMAGE_DATA_PATH : " + IMAGE_DATA_PATH)
     print("[INFO] new MASK_DATA_PATH : "+ MASK_DATA_PATH)
     IMAGES_FILENAMES = os.listdir(IMAGE_DATA_PATH)
@@ -194,14 +195,18 @@ def build_unet_model(type):
         y_true_f = K.flatten(y_true)
         y_pred_f = K.flatten(y_pred)
         intersection = K.sum(y_true_f * y_pred_f)
-        return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
-        
-    def bce_dice_loss(y_true, y_pred):
-        return tf.keras.losses.binary_crossentropy(y_true, y_pred) + dice_coef(y_true, y_pred)
+        return ((2 * intersection + smooth)
+            / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth))
 
+    def bce_dice_loss(y_true, y_pred):
+        return (tf.keras.losses.binary_crossentropy(y_true, y_pred)
+            + dice_coef(y_true, y_pred))
+
+    # Define U-Net input
     inputs = tf.keras.layers.Input((IMG_HEIGHT, IMG_WIDTH,+ IMG_CHANNELS))
     s = tf.keras.layers.Lambda(lambda x: x / 255)(inputs)
-    
+
+    # Down-sampling
     c1 = tf.keras.layers.Conv2D(
         16, (3, 3), activation=tf.keras.activations.relu,
         kernel_initializer='he_normal', padding='same')(s)
@@ -245,7 +250,8 @@ def build_unet_model(type):
     c5 = tf.keras.layers.Conv2D(
         256, (3, 3), activation=tf.keras.activations.relu,
         kernel_initializer='he_normal', padding='same')(c5)
-    
+
+    # Up-sampling
     u6 = tf.keras.layers.Conv2DTranspose(
         128, (2, 2), strides=(2, 2), padding='same')(c5)
     u6 = tf.keras.layers.concatenate([u6, c4])
@@ -260,6 +266,7 @@ def build_unet_model(type):
     u7 = tf.keras.layers.Conv2DTranspose(
         64, (2, 2), strides=(2, 2), padding='same')(c6)
     if type > 0:
+        # Add dense layer #1
         d_u1 = tf.keras.layers.Conv2DTranspose(
             64, (2, 2), strides=(2, 2), padding='same')(c4)
         d1 = tf.keras.layers.concatenate([d_u1, c3])
@@ -280,6 +287,7 @@ def build_unet_model(type):
     u8 = tf.keras.layers.Conv2DTranspose(
         32, (2, 2), strides=(2, 2), padding='same')(c7)
     if type > 0:
+        # Add dense layer #2
         d_u2 = tf.keras.layers.Conv2DTranspose(
             32, (2, 2), strides=(2, 2), padding='same')(c3)
         d2 = tf.keras.layers.concatenate([d_u2, c2])
@@ -307,6 +315,7 @@ def build_unet_model(type):
     u9 = tf.keras.layers.Conv2DTranspose(
         16, (2, 2), strides=(2, 2), padding='same')(c8)
     if type > 0:
+        # Add dense layer #3
         d_uc2 = tf.keras.layers.Conv2DTranspose(
             16, (2, 2), strides=(2, 2), padding='same')(c2)
         d4 = tf.keras.layers.concatenate([d_uc2, c1])
@@ -339,15 +348,24 @@ def build_unet_model(type):
     outputs = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
 
     if type > 1:
+        # Add deep supervision
         output_d4 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d4)
         output_d5 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d5)
         output_d6 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d6)
-        model = tf.keras.Model(inputs=[inputs], outputs=[outputs, output_d4, output_d5, output_d6])
-        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    else:
-        model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
+        model = tf.keras.Model(
+            inputs=[inputs], outputs=[outputs, output_d4, output_d5, output_d6])
+        # Add custom loss if asked
         loss = bce_dice_loss if type == 3 else 'binary_crossentropy'
-        model.compile(optimizer='adam', loss=loss, metrics=['accuracy', 'binary_accuracy', 'categorical_accuracy'])
+        model.compile(
+            optimizer='adam',
+            loss=loss,
+            metrics=['accuracy', 'binary_accuracy', 'categorical_accuracy']
+        )
+    else:
+        # No deep supervision
+        model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
+        model.compile(
+            optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
     model.summary()
     return model
@@ -360,24 +378,35 @@ def load_model(model):
         print("""[ERROR] Could not locate file for model weights. Proceding
             without loading weights.""")
 
-def train(model, epochs, is_generated, type):
+def load_images(is_generated):
     print("[INFO] Loading images into RAM", flush = True)
-    X = np.zeros((len(IMAGES_FILENAMES), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
-    Y = np.zeros((len(IMAGES_FILENAMES), IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool)
+    X = np.zeros((len(IMAGES_FILENAMES), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS),
+                 dtype=np.uint8)
+    Y = np.zeros((len(IMAGES_FILENAMES), IMG_HEIGHT, IMG_WIDTH, 1),
+                 dtype=np.bool)
 
-    for n, filename in tqdm(enumerate(IMAGES_FILENAMES), total=len(IMAGES_FILENAMES)):   
+    for n, filename in tqdm(enumerate(IMAGES_FILENAMES),
+                            total=len(IMAGES_FILENAMES)):   
         img = imread(IMAGE_DATA_PATH + filename)[:,:,:IMG_CHANNELS]
-        img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True)
+        img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant',
+                     preserve_range=True)
         X[n] = img
         mask = imread(MASK_DATA_PATH + filename)
-        mask = np.expand_dims(resize(mask, (IMG_HEIGHT, IMG_WIDTH), mode='constant',
-                                        preserve_range=True), axis=-1)
+        mask = np.expand_dims(resize(mask, (IMG_HEIGHT, IMG_WIDTH),
+                                     mode='constant', preserve_range=True),
+                              axis=-1)
         if is_generated:
             Y[n] = mask[:,:,0]
         else:
             Y[n] = mask
+    return X, Y
+
+def train(model, epochs, is_generated, type):
+    X, Y = load_images(is_generated)
+        
     log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
+                                                          histogram_freq=1)
 
     cp_callback = tf.keras.callbacks.ModelCheckpoint(
         checkpoint_path, 
@@ -400,11 +429,16 @@ def train(model, epochs, is_generated, type):
     model.save_weights(MODEL_SAVE_LOCATION, overwrite=True)
     gc.collect()
 
+def load_validation_set():
+    generate_images(1, folder=VALIDATION_DATA_PATH)
+    update_path_train_set(VALIDATION_DATA_PATH)
+    return load_images(is_generated=True)
+
 def compute_best_threshold(model, X, Y, type):
     # best foreground_threshold: missclasified tiles count
-    NUMBERS_OF_IMAGES_TO_USE = 100      # This is the number of images to use durring the calculation.
-    MIN_FOREGROUND_VALUE = 0.30 #included
-    MAX_FOREGOURND_VALUE = 0.38   #included
+    NUMBERS_OF_IMAGES_TO_USE = 100 # Number of images to classify
+    MIN_FOREGROUND_VALUE = 0.30
+    MAX_FOREGOURND_VALUE = 0.50
     STEP = 0.001
 
     # assign a label to a patch
@@ -437,15 +471,17 @@ def compute_best_threshold(model, X, Y, type):
 
     number_of_pixels_off = []  #average number of missclasified images
     fg_values =  np.arange(MIN_FOREGROUND_VALUE,MAX_FOREGOURND_VALUE+STEP,STEP)
-    for idx, fg in tqdm(enumerate(fg_values), total= len(fg_values)):
+    for idx, fg in tqdm(enumerate(fg_values), total=len(fg_values)):
         total = 0
         for idx in range(NUMBERS_OF_IMAGES_TO_USE):
             prediction = get_prediction(X[idx], fg)
-            total += np.abs(prediction - mask_to_submission_strings(np.squeeze(Y[idx]), fg)).sum()
-        number_of_pixels_off.append( total / NUMBERS_OF_IMAGES_TO_USE)
+            total += (np.abs(prediction
+                - mask_to_submission_strings(np.squeeze(Y[idx]), fg)).sum())
+        number_of_pixels_off.append(total / NUMBERS_OF_IMAGES_TO_USE)
     best_threshold = fg_values[np.argmin(number_of_pixels_off)]
-    print( f'best foreground_threshold value : {best_threshold}')
-    print(f'Given best threshold average number of missclasified tiles : {np.min(number_of_pixels_off)}')
+    print( f'Best foreground_threshold value : {best_threshold}')
+    min = np.min(number_of_pixels_off)
+    print(f'Given best threshold average number of missclasified tiles : {min}')
     return best_threshold
 
 def predict(model, type):
@@ -466,7 +502,9 @@ def predict(model, type):
             subdivisions=2,  # Minimal amount of overlap for windowing
             nb_classes=1,
                 pred_func=(
-                    lambda img_batch_subdiv: model.predict(img_batch_subdiv) if type < 2 else model.predict(img_batch_subdiv)[0]
+                    lambda img_batch_subdiv:
+                        model.predict(img_batch_subdiv) if type < 2
+                        else model.predict(img_batch_subdiv)[0]
                 )
             )
         )
@@ -487,8 +525,9 @@ def predict(model, type):
         Image.fromarray(cimg).save(PREDICTION_SUBMISSION_DIR + f"gt_{i}.png")
 
 def predict_aicrowd(foreground_threshold):
-    # assign a label to a patch
+
     def patch_to_label(patch):
+        """Assign a label to a patch"""
         df = np.mean(patch)
         if df > foreground_threshold:
             return 1
@@ -496,7 +535,9 @@ def predict_aicrowd(foreground_threshold):
             return 0
 
     def mask_to_submission_strings(image_filename):
-        """Reads a single image and outputs the strings that should go into the submission file"""
+        """Reads a single image and outputs the strings that should go into the
+        submission file
+        """
         img_number = int(re.search(r"\d+", image_filename).group(0))
         im = mpimg.imread(image_filename)
         patch_size = 16
@@ -508,11 +549,13 @@ def predict_aicrowd(foreground_threshold):
 
 
     def masks_to_submission(submission_filename, *image_filenames):
-        """Converts images into a submission file"""
+        """Converts images into a submission file
+        """
         with open(submission_filename, 'w') as f:
             f.write('id,prediction\n')
             for fn in image_filenames[0:]:
-                f.writelines('{}\n'.format(s) for s in mask_to_submission_strings(fn))
+                f.writelines('{}\n'.format(s)
+                             for s in mask_to_submission_strings(fn))
 
     print("[INFO] Parsing prediction for AICrowd")
     time = strftime("%Y%m%dT%H%M%S")
@@ -553,9 +596,9 @@ def main():
         )
 
     if args.threshold:
-        # TODO create validation set
+        X, Y = load_validation_set()
         best_threshold = compute_best_threshold(
-            model, X=[], Y=[], type=args.model)
+            model, X=X, Y=Y, type=args.model)
         pass
     else:
         best_threshold = 0.4
@@ -572,6 +615,7 @@ def main():
 
 
 if __name__ == '__main__':
+    # Set relevant seeds
     os.environ['PYTHONHASHSEED'] = str(SEED)
     random.seed = SEED
     tf.random.set_seed(SEED)
