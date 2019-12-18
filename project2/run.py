@@ -430,7 +430,6 @@ def train(model, epochs, is_generated, type):
     gc.collect()
 
 def load_validation_set():
-    generate_images(1, folder=VALIDATION_DATA_PATH)
     update_path_train_set(VALIDATION_DATA_PATH)
     return load_images(is_generated=True)
 
@@ -576,6 +575,10 @@ def main():
 
     if args.generate > 0:
         generate_images(args.generate)
+    
+    if args.threshold and not [f for f in os.listdir(VALIDATION_DATA_PATH)
+                               if not f.startswith('.')]:
+        generate_images(1, folder=VALIDATION_DATA_PATH)
 
     np.random.seed = SEED
 
