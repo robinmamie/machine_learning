@@ -605,7 +605,6 @@ def main():
         X, Y = load_validation_set()
         best_threshold = compute_best_threshold(
             model, X=X, Y=Y, type=args.model)
-        pass
     else:
         best_threshold = 0.4
 
