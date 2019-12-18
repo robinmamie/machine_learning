@@ -10,12 +10,14 @@ from sklearn.metrics import f1_score
 
 def get_F1_threshold(x_val, y_val, threshold_value):
   '''
-  let x_val be an array of length [100,400,400,3]
-  let y_val be an array of shape [100,400,400,1]
+  let x_val be an array of length [100,400,400,3]. These are the images from the validation set
+  let y_val be an array of shape [100,400,400,1]. These are the masks of the ground truth
   let threshold_value be the value of the threshold to test
-
   '''
 
+  assert x_val.shape[0] >= 100 , "x_val is not large enough. First dimmension less than 100 needs to be greater than 100"
+  assert y_val.shape[0] >= 100, "y_val is not large enough. First dimmension less than 100 needs to be greater than 100"
+  
   NUMBERS_OF_IMAGES_TO_USE = 100      # This is the number of images to use durring the calculation.
 
   # assign a label to a patch
