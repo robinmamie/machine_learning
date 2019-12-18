@@ -431,7 +431,7 @@ def train(model, epochs, is_generated, type):
     model.save_weights(MODEL_SAVE_LOCATION, overwrite=True)
     gc.collect()
 
-def compute_best_threshold(model, X, Y, type):
+def compute_best_threshold(model, type):
     # best foreground_threshold: missclasified tiles count
     NUMBERS_OF_IMAGES_TO_USE = 100 # Number of images to classify
     MIN_FOREGROUND_VALUE = 0.39
