@@ -24,32 +24,29 @@ from tqdm import tqdm
 from smooth_tiled_predictions import predict_img_with_smooth_windowing
 
 # Constants
-# Image definition
+## Seeding
+SEED = 42
+
+## Image definition
 IMG_WIDTH    = 400
 IMG_HEIGHT   = 400
 IMG_CHANNELS = 3
 PIXEL_DEPTH  = 255
 
-# Folder definitions
+## Folder definitions
 IMAGE_DATA_PATH           = 'training/images/'
 MASK_DATA_PATH            = 'training/groundtruth/'
 MODEL_SAVE_LOCATION       = 'road_segmentation_model.h5'
 SUBMISSION_DATA_DIR       = 'test_set_images/'
 PREDICTION_SUBMISSION_DIR = 'predictions_submission/'
-
-IMAGES_FILENAMES = os.listdir(IMAGE_DATA_PATH)
-
-# Image generation
+CHECKPOINT_PATH           = 'checkpoints/cp.ckpt'
+IMAGES_FILENAMES          = os.listdir(IMAGE_DATA_PATH)
+### Image generation
 OUTPUT_DATA_IMAGE_PATH = 'augmented_set/'
-VALIDATION_DATA_PATH = 'validation_set/'
-
-# Checkpoints
-checkpoint_path = 'checkpoints/cp.ckpt'
-
-# Seeding
-SEED = 42
+VALIDATION_DATA_PATH   = 'validation_set/'
 
 def parse_flags():
+    """Parses the flags given at the execution."""
     parser = ap.ArgumentParser(description="""Prediction runner for the EPFL ML
         Road Segmentation 2019 Challenge. The default behaviour loads our best
         model and creates its AICrowd submission.""")
@@ -97,7 +94,33 @@ def parse_flags():
         dest='threshold',
         action='store_true',
         help='Search the best threshold on a validation set (default False)',
-        default=0,
+    )
+    parser.add_argument(
+        '-min-threshold',
+        metavar='limit',
+        dest='min_threshold',
+        type=float,
+        nargs='?',
+        help='Minimum threshold search (default 0.39)',
+        default=0.39,
+    )
+    parser.add_argument(
+        '-max-threshold',
+        metavar='limit',
+        dest='max_threshold',
+        type=float,
+        nargs='?',
+        help='Maximum threshold search (default 0.41)',
+        default=0.41,
+    )
+    parser.add_argument(
+        '-step-threshold',
+        metavar='step',
+        dest='step_threshold',
+        type=float,
+        nargs='?',
+        help='Step for the threshold search (default 1e-3)',
+        default=1e-3,
     )
     parser.add_argument(
         '--no-predict',
@@ -122,6 +145,15 @@ def parse_flags():
     return args
 
 def generate_images(number_to_generate, folder=OUTPUT_DATA_IMAGE_PATH):
+    """Generates a new augmented training set.
+    
+    Parameters
+    ----------
+    nunmber_to_generate : int
+        The number of images to generate per original training image
+    folder : str
+        The path to the set's folder
+    """
     # load the input image, convert it to a NumPy array, and then
     # reshape it to have an extra dimension
     print(f"""[INFO] Generating {number_to_generate} images per training image
@@ -180,6 +212,13 @@ def generate_images(number_to_generate, folder=OUTPUT_DATA_IMAGE_PATH):
                 break
 
 def update_path_train_set(folder=OUTPUT_DATA_IMAGE_PATH):
+    """Updates the global path pointing to the training set.
+    
+    Parameters
+    ----------
+    folder : str
+        The path to the set's folder
+    """
     print("[INFO] Updating images_filename")
     IMAGE_DATA_PATH = folder+'images/'
     MASK_DATA_PATH = folder+ 'groundtruth/'
@@ -189,6 +228,19 @@ def update_path_train_set(folder=OUTPUT_DATA_IMAGE_PATH):
     print("[INFO] There are " + str(len(IMAGES_FILENAMES)) + " found")
 
 def build_unet_model(type):
+    """Builds the corresponding U-Net model.
+    
+    Parameters
+    ----------
+    type : int
+        The TensorFlow model type (0: U-Net, 1: UNet++, 2: UNet++ with
+        deep supervision, 3: UNet++ with DS and custom loss)
+
+    Returns
+    -------
+    tf.keras.Model
+        The newly created TensorFlow model
+    """
 
     def dice_coef(y_true, y_pred):
         y_pred = ops.convert_to_tensor(y_pred)
@@ -355,7 +407,9 @@ def build_unet_model(type):
         output_d5 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d5)
         output_d6 = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(d6)
         model = tf.keras.Model(
-            inputs=[inputs], outputs=[outputs, output_d4, output_d5, output_d6])
+            inputs=[inputs],
+            outputs=[outputs, output_d4, output_d5, output_d6]
+        )
         # Add custom loss if asked
         loss = bce_dice_loss if type == 3 else 'binary_crossentropy'
         model.compile(
@@ -373,6 +427,7 @@ def build_unet_model(type):
     return model
 
 def load_model(model):
+    """Loads a previously computed model's weights."""
     if os.path.isfile(MODEL_SAVE_LOCATION):
         print("[INFO] Loading saved model weights")
         model.load_weights(MODEL_SAVE_LOCATION)
@@ -381,6 +436,20 @@ def load_model(model):
             without loading weights.""")
 
 def load_images(is_generated):
+    """Loads the previously selected images into the RAM.
+    
+    Parameters
+    ----------
+    is_generated : bool
+        Whether the training images are generated or not
+
+    Returns
+    -------
+    ndarray
+        The training set's features
+    ndarray
+        The training set's labels
+    """
     print("[INFO] Loading images into RAM", flush = True)
     X = np.zeros((len(IMAGES_FILENAMES), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS),
                  dtype=np.uint8)
@@ -404,6 +473,20 @@ def load_images(is_generated):
     return X, Y
 
 def train(model, epochs, is_generated, type):
+    """Trains the TensorFlow model.
+    
+    Parameters
+    ----------
+    model : tf.keras.Model
+        The TensorFlow model used for the predictions
+    epochs : int
+        The number of epochs to train the model with
+    is_generated : bool
+        Whether the training images are generated or not
+    type : int
+        The TensorFlow model type (0: U-Net, 1: UNet++, 2: UNet++ with
+        deep supervision, 3: UNet++ with DS and custom loss)
+    """
     X, Y = load_images(is_generated)
         
     log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -411,7 +494,7 @@ def train(model, epochs, is_generated, type):
                                                           histogram_freq=1)
 
     cp_callback = tf.keras.callbacks.ModelCheckpoint(
-        checkpoint_path, 
+        CHECKPOINT_PATH, 
         save_weights_only=True,
         verbose=1
     )
@@ -431,12 +514,31 @@ def train(model, epochs, is_generated, type):
     model.save_weights(MODEL_SAVE_LOCATION, overwrite=True)
     gc.collect()
 
-def compute_best_threshold(model, type):
+def compute_best_threshold(model, type, lower, upper, step):
+    """Computes the best threshold used for predictions, according to
+    the number of misclassified tiles on a generated validation set.
+    
+    Parameters
+    ----------
+    model : tf.keras.Model
+        The TensorFlow model used for the predictions
+    type : int
+        The TensorFlow model type (0: U-Net, 1: UNet++, 2: UNet++ with
+        deep supervision, 3: UNet++ with DS and custom loss)
+    lower : float
+        The search's lower bound
+    upper : float
+        The search's upper bound
+    step : float
+        The search's step size
+
+    Returns
+    -------
+    float
+        The best prediction threshold
+    """
     # best foreground_threshold: missclasified tiles count
     NUMBERS_OF_IMAGES_TO_USE = 100 # Number of images to classify
-    MIN_FOREGROUND_VALUE = 0.39
-    MAX_FOREGOURND_VALUE = 0.41
-    STEP = 0.001
 
     # Load images
     update_path_train_set(VALIDATION_DATA_PATH)
@@ -471,7 +573,7 @@ def compute_best_threshold(model, type):
 
     print('[INFO] Computing the best prediction threshold')
     number_of_pixels_off = []  #average number of missclasified images
-    fg_values =  np.arange(MIN_FOREGROUND_VALUE,MAX_FOREGOURND_VALUE+STEP,STEP)
+    fg_values =  np.arange(lower, upper+step, step)
     for idx, fg in tqdm(enumerate(fg_values), total=len(fg_values)):
         total = 0
         for idx in range(NUMBERS_OF_IMAGES_TO_USE):
@@ -486,6 +588,16 @@ def compute_best_threshold(model, type):
     return best_threshold
 
 def predict(model, type):
+    """Predicts the test set images using the given model and its type.
+    
+    Parameters
+    ----------
+    model : tf.keras.Model
+        The TensorFlow model used for the predictions
+    type : int
+        The TensorFlow model type (0: U-Net, 1: UNet++, 2: UNet++ with
+        deep supervision, 3: UNet++ with DS and custom loss)
+    """
     def img_float_to_uint8(img):
         rimg = img - np.min(img)
         rimg = (rimg / np.max(rimg) * PIXEL_DEPTH).round().astype(np.uint8)
@@ -526,7 +638,13 @@ def predict(model, type):
         Image.fromarray(cimg).save(PREDICTION_SUBMISSION_DIR + f"gt_{i}.png")
 
 def predict_aicrowd(foreground_threshold):
-
+    """Creates a submission for AIcrowd.
+    
+    Parameters
+    ----------
+    foreground_threshold : float
+        Ratio of pixels to be set for a patch to be predicted as a road
+    """
     def patch_to_label(patch):
         """Assign a label to a patch"""
         df = np.mean(patch)
@@ -536,8 +654,8 @@ def predict_aicrowd(foreground_threshold):
             return 0
 
     def mask_to_submission_strings(image_filename):
-        """Reads a single image and outputs the strings that should go into the
-        submission file
+        """Reads a single image and outputs the strings that should go
+        into the submission file
         """
         img_number = int(re.search(r"\d+", image_filename).group(0))
         im = mpimg.imread(image_filename)
@@ -568,6 +686,7 @@ def predict_aicrowd(foreground_threshold):
     masks_to_submission(submission_filename, *image_filenames)
 
 def main():
+    """Main function of the script"""
     args = parse_flags()
 
     if args.rtx:
@@ -576,24 +695,33 @@ def main():
         tf.config.experimental.set_memory_growth(gpu[0], True)
 
     if args.generate > 0:
+        # Generate the augmented training set
         generate_images(args.generate)
     
     if (args.threshold
             and not [f for f in os.listdir(VALIDATION_DATA_PATH+'images')
                      if not f.startswith('.')]):
+        # Genereate the augmented validation set for thresholding, if
+        # necessary and if asked for
         generate_images(1, folder=VALIDATION_DATA_PATH)
 
+    # Fix numpy seed *after* using the Keras image generator (otherwise
+    # it crashes)
     np.random.seed = SEED
 
     if args.augmented_set:
+        # Update the path if user asked to use the augmented set
         update_path_train_set()
 
+    # Build the corresponding U-Net model
     model = build_unet_model(args.model)
 
     if args.load:
+        # Load any previously computed weights
         load_model(model)
 
     if args.epochs > 0:
+        # Train the model
         train(
             model,
             epochs=args.epochs,
@@ -602,16 +730,27 @@ def main():
         )
 
     if args.threshold:
-        best_threshold = compute_best_threshold(model, type=args.model)
+        # Find the best threshold for the submission creation, i.e. how
+        # many pixels must be set for a patch to be predicted as a road
+        best_threshold = compute_best_threshold(
+            model,
+            type=args.model,
+            lower=args.min_threshold,
+            upper=args.max_threshold,
+            step=args.step_threshold,
+        )
     else:
+        # Use the default threshold, optimized for our best model
         best_threshold = 0.4
 
     if args.predict:
+        # Make predictions on images and save them on the drive
         predict(model, args.model)
     else:
         print("[INFO] Skipping predicting test images")
 
     if args.aicrowd:
+        # Create the AIcrowd submission using the best threshold
         predict_aicrowd(best_threshold)
     else:
         print("[INFO] Skipping prediction for AICrowd")
