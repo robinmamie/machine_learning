@@ -757,6 +757,15 @@ def main():
 
 
 if __name__ == '__main__':
+    # Create folders
+    if not os.path.exists(OUTPUT_DATA_IMAGE_PATH):
+        os.makedirs(OUTPUT_DATA_IMAGE_PATH)
+    if not os.path.exists(VALIDATION_DATA_PATH):
+        os.makedirs(VALIDATION_DATA_PATH)
+    if not os.path.exists(VALIDATION_DATA_PATH+'images'):
+        os.makedirs(VALIDATION_DATA_PATH+'images')
+    if not os.path.exists(VALIDATION_DATA_PATH+'groundtruth'):
+        os.makedirs(VALIDATION_DATA_PATH+'groundtruth')
     # Set relevant seeds
     os.environ['PYTHONHASHSEED'] = str(SEED)
     random.seed = SEED

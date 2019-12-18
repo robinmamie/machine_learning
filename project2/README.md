@@ -26,17 +26,34 @@ Here is an explanatory list for our requirements (and their version number):
 We also make use of the local file `smooth_tiled_predictions.py`. It was fetched from [this repository](https://github.com/Vooban/Smoothly-Blend-Image-Patches) (commit 2f5866bce03ac5edfecd1bacfdd8a0663c659f09), created by Guillaume Chevalier.
 This file is very useful to apply our neural network on test images that are bigger than our training images.
 
+### Preparation
+
+The script works on test set images after the following manipulation on the original zip file:
+
+    unzip test_set_images.zip
+    mkdir test_set_images/tmp
+    mv test_set_images/test_*/* test_set_images/tmp
+    rm -r test_set_images/test_*
+    mv test_set_images/tmp/* test_set_images
+    rm -r test_set_images/tmp
+
+This ensure that all test set images are at the root of the test_set_images folder.
+
+To prepare the train set images:
+
+    unzip training.zip
+
 ## Folder structure
 
     .
     ├── archive                      # Contains different notebooks used for development
     ├── augmented_set                # Created with the provided script
     │   ├── groundtruth
+    │   │   └── ...
     │   └── images
+    │       └── ...
     ├── checkpoints                  # Created to save training checkpoints
     ├── predictions_submission       # Folder where the predictions are saved
-    ├── report
-    │   └── ...                      # Report files
     ├── smooth_tiled_predictions.py  # External library, predict using bigger images than training set
     ├── test_set_images              # Folder created by unzipping test_set_images.zip and putting all the images at its root
     │   ├── test_1.png
@@ -44,9 +61,11 @@ This file is very useful to apply our neural network on test images that are big
     │   └── test_50.png
     ├── training                     # Folder created by unzipping training.zip
     │   ├── groundtruth
+    │   │   └── ...
     │   └── images
+    │       └── ...
     ├── README.md
-    ├── requirements.txt
+    ├── requirements.txt             # Python requirements
     ├── run.py                       # The main script
     └── validation_set               # Created for dynamic thresholding
         ├── groundtruth
