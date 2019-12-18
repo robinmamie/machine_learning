@@ -124,6 +124,8 @@ def parse_flags():
 def generate_images(number_to_generate, folder=OUTPUT_DATA_IMAGE_PATH):
     # load the input image, convert it to a NumPy array, and then
     # reshape it to have an extra dimension
+    print(f"""[INFO] Generating {number_to_generate} images per training image
+              in {folder}""")
     for img in tqdm(IMAGES_FILENAMES):
         image = load_img(IMAGE_DATA_PATH+img)
         image = img_to_array(image)
