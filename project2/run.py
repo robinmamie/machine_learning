@@ -576,8 +576,9 @@ def main():
     if args.generate > 0:
         generate_images(args.generate)
     
-    if args.threshold and not [f for f in os.listdir(VALIDATION_DATA_PATH)
-                               if not f.startswith('.')]:
+    if (args.threshold
+            and not [f for f in os.listdir(VALIDATION_DATA_PATH+'images')
+                     if not f.startswith('.')]):
         generate_images(1, folder=VALIDATION_DATA_PATH)
 
     np.random.seed = SEED
