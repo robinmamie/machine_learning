@@ -7,7 +7,24 @@ In this project, we explore the different possibilities by starting with a simpl
 
 ## Requirements
 
-The file `requirements.txt` contains all required libraries to run our project.
+The script was developped using `Python 3.7.5`. The file `requirements.txt` contains all required libraries to run our project. To install all requirements, use the following command, using pip:
+
+    pip install -r requirements.txt
+
+Here is an explanatory list for our requirements (and their version number):
+
+- tensorflow (2.0.0): model creation and training
+- Keras (2.2.4): model creation and training
+- numpy (1.17.4): general purpose library
+- matplotlib (3.1.1): helper for the AIcrowd submission
+- tqdm (4.40.2): shows user friendly progress bars in the console
+- scikit_image (0.15.0): image handling
+- Pillow (6.2.1): image handling
+
+### Other external libraries
+
+We also make use of the local file `smooth_tiled_predictions.py`. It was fetched from [this repository](https://github.com/Vooban/Smoothly-Blend-Image-Patches) (commit 2f5866bce03ac5edfecd1bacfdd8a0663c659f09), created by Guillaume Chevalier.
+This file is very useful to apply our neural network on test images that are bigger than our training images.
 
 ## Folder structure
 
@@ -51,27 +68,36 @@ The help message of the script shows this:
 
     usage: run.py [-h] [-generate [number]] [--use-augmented-set]
                 [-model [number]] [--no-load] [-train [epochs]]
-                [--search-threshold] [--no-predict] [--no-aicrowd] [--rtx]
+                [--search-threshold] [-min-threshold [limit]]
+                [-max-threshold [limit]] [-step-threshold [step]] [--no-predict]
+                [--no-aicrowd] [--rtx]
 
     Prediction runner for the EPFL ML Road Segmentation 2019 Challenge. The
     default behaviour loads our best model and creates its AICrowd submission.
 
     optional arguments:
-    -h, --help           show this help message and exit
-    -generate [number]   Number of images to generate per train set image
-                        (default 0)
-    --use-augmented-set  Use the generated augmented train set (default False)
-    -model [number]      Number of the model to use (default 1)
-    --no-load            Do not load any previously saved model (default True)
-    -train [epochs]      Number of epochs to train the neural network with
-                        (default 0)
-    --search-threshold   Search the best threshold on a validation set (default
-                        False)
-    --no-predict         Do not predict any image from the test set (default
-                        True)
-    --no-aicrowd         Do not generate file for AICrowd submission (default
-                        True)
-    --rtx                Allow memory growth for RTX GPUs (default False)
+    -h, --help            show this help message and exit
+    -generate [number]    Number of images to generate per train set image
+                            (default 0)
+    --use-augmented-set   Use the generated augmented train set (default False)
+    -model [number]       Number of the model to use (default 1)
+    --no-load             Do not load any previously saved model (default True)
+    -train [epochs]       Number of epochs to train the neural network with
+                            (default 0)
+    --search-threshold    Search the best threshold on a validation set (default
+                            False)
+    -min-threshold [limit]
+                            Minimum threshold search (default 0.39)
+    -max-threshold [limit]
+                            Maximum threshold search (default 0.41)
+    -step-threshold [step]
+                            Step for the threshold search (default 1e-3)
+    --no-predict          Do not predict any image from the test set (default
+                            True)
+    --no-aicrowd          Do not generate file for AICrowd submission (default
+                            True)
+    --rtx                 Allow memory growth for RTX GPUs (default False)
+
 
 ### Model number
 
