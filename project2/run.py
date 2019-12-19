@@ -469,9 +469,9 @@ def load_images(is_generated):
                                      mode='constant', preserve_range=True),
                               axis=-1)
         if is_generated:
-            Y[n] = mask
-        else:
             Y[n] = mask[:,:,0]
+        else:
+            Y[n] = mask
     return X, Y
 
 def train(model, epochs, is_generated, type):
