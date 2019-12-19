@@ -218,13 +218,15 @@ def update_path_train_set(folder=OUTPUT_DATA_IMAGE_PATH):
         The path to the set's folder
     """
     print("[INFO] Updating images_filename")
+    global IMAGE_DATA_PATH
     IMAGE_DATA_PATH = folder+'images/'
+    global MASK_DATA_PATH
     MASK_DATA_PATH = folder+ 'groundtruth/'
     print("[INFO] new IMAGE_DATA_PATH : " + IMAGE_DATA_PATH)
     print("[INFO] new MASK_DATA_PATH : "+ MASK_DATA_PATH)
-    images_filenames = os.listdir(IMAGE_DATA_PATH)
-    print("[INFO] There are " + str(len(images_filenames)) + " found")
-    return images_filenames
+    global IMAGES_FILENAMES
+    IMAGES_FILENAMES = os.listdir(IMAGE_DATA_PATH)
+    print("[INFO] There are " + str(len(IMAGES_FILENAMES)) + " found")
 
 def build_unet_model(type):
     """Builds the corresponding U-Net model.
