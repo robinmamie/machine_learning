@@ -18,7 +18,7 @@ Here is an explanatory list for our requirements (and their version number):
 - numpy (1.17.4): general purpose library
 - matplotlib (3.1.1): helper for the AIcrowd submission
 - tqdm (4.40.2): shows user friendly progress bars in the console
-- scikit_image (0.15.0): image handling
+- scikit-image (0.15.0): image handling
 - Pillow (6.2.1): image handling
 
 Download the `test_set_images.zip` and `training.zip` files directly from the *EPFL ML Road Segmentation 2019* AIcrowd challenge and put them into this folder. Please follow the instructions in the *Preparation* section.
@@ -145,3 +145,12 @@ Here are the available models in the script run.py:
 - 1: U-Net++
 - 2: U-Net++ with deep supervision
 - 3: U-Net++ with deep supervision and a custom loss
+
+### Script implementation
+
+The `run.py` script implements everything necessary to train the models we used during this project and make predictions, as described above and in our report. Note the following notable exceptions:
+
+- The basic CNN
+- Our F1 metric
+
+These are available in the `notebooks` folder, either as a standalone script, or as a pipeline in a Jupyter notebook. Please refer to the `README.md` of the folder.
