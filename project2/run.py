@@ -680,9 +680,24 @@ def predict_aicrowd(foreground_threshold):
         image_filenames.append(image_filename)
     masks_to_submission(submission_filename, *image_filenames)
 
+def create_folder(folder):
+    """Creates all necessary local folders.
+    
+    Parameters
+    ----------
+    folder : string
+        Name of the base folder
+    """
+    for suffix in ['','images','groundtruth']:
+        if not os.path.exists(folder+suffix):
+                os.makedirs(folder+suffix)
+
 def main():
     """Main function of the script"""
     args = parse_flags()
+
+    for folder in [OUTPUT_DATA_IMAGE_PATH, VALIDATION_DATA_PATH]:
+        create_folder(folder)
 
     if args.rtx:
         # Force the graphical memory growth to True (for RTX cards)
@@ -752,15 +767,6 @@ def main():
 
 
 if __name__ == '__main__':
-    # Create folders
-    if not os.path.exists(OUTPUT_DATA_IMAGE_PATH):
-        os.makedirs(OUTPUT_DATA_IMAGE_PATH)
-    if not os.path.exists(VALIDATION_DATA_PATH):
-        os.makedirs(VALIDATION_DATA_PATH)
-    if not os.path.exists(VALIDATION_DATA_PATH+'images'):
-        os.makedirs(VALIDATION_DATA_PATH+'images')
-    if not os.path.exists(VALIDATION_DATA_PATH+'groundtruth'):
-        os.makedirs(VALIDATION_DATA_PATH+'groundtruth')
     # Set relevant seeds
     os.environ['PYTHONHASHSEED'] = str(SEED)
     random.seed = SEED
