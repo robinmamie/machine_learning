@@ -471,7 +471,7 @@ def load_images(is_generated, images_filenames):
             Y[n] = mask
     return X, Y
 
-def train(model, epochs, is_generated, type, load_path):
+def train(model, epochs, is_generated, type, images_filenames):
     """Trains the TensorFlow model.
     
     Parameters
@@ -486,7 +486,7 @@ def train(model, epochs, is_generated, type, load_path):
         The TensorFlow model type (0: U-Net, 1: UNet++, 2: UNet++ with
         deep supervision, 3: UNet++ with DS and custom loss)
     """
-    X, Y = load_images(is_generated, load_path=load_path)
+    X, Y = load_images(is_generated, images_filenames=images_filenames)
         
     log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
