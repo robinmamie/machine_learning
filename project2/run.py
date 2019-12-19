@@ -40,7 +40,6 @@ MODEL_SAVE_LOCATION       = 'road_segmentation_model.h5'
 SUBMISSION_DATA_DIR       = 'test_set_images/'
 PREDICTION_SUBMISSION_DIR = 'predictions_submission/'
 CHECKPOINT_PATH           = 'checkpoints/cp.ckpt'
-IMAGES_FILENAMES          = os.listdir(IMAGE_DATA_PATH)
 ### Image generation
 OUTPUT_DATA_IMAGE_PATH = 'augmented_set/'
 VALIDATION_DATA_PATH   = 'validation_set/'
@@ -143,7 +142,7 @@ def parse_flags():
     args = parser.parse_args()
     return args
 
-def generate_images(number_to_generate, folder=OUTPUT_DATA_IMAGE_PATH):
+def generate_images(number_to_generate, images_filenames, folder=OUTPUT_DATA_IMAGE_PATH):
     """Generates a new augmented training set.
     
     Parameters
@@ -157,7 +156,7 @@ def generate_images(number_to_generate, folder=OUTPUT_DATA_IMAGE_PATH):
     # reshape it to have an extra dimension
     print(f"""[INFO] Generating {number_to_generate} images per training image
               in {folder}""")
-    for img in tqdm(IMAGES_FILENAMES):
+    for img in tqdm(images_filenames):
         image = load_img(IMAGE_DATA_PATH+img)
         image = img_to_array(image)
         image = np.expand_dims(image, axis=0)
@@ -223,8 +222,9 @@ def update_path_train_set(folder=OUTPUT_DATA_IMAGE_PATH):
     MASK_DATA_PATH = folder+ 'groundtruth/'
     print("[INFO] new IMAGE_DATA_PATH : " + IMAGE_DATA_PATH)
     print("[INFO] new MASK_DATA_PATH : "+ MASK_DATA_PATH)
-    IMAGES_FILENAMES = os.listdir(IMAGE_DATA_PATH)
-    print("[INFO] There are " + str(len(IMAGES_FILENAMES)) + " found")
+    images_filenames = os.listdir(IMAGE_DATA_PATH)
+    print("[INFO] There are " + str(len(images_filenames)) + " found")
+    return images_filenames
 
 def build_unet_model(type):
     """Builds the corresponding U-Net model.
@@ -434,7 +434,7 @@ def load_model(model):
         raise IOError("""[ERROR] Could not locate file for model weights.
             Proceding without loading weights.""")
 
-def load_images(is_generated):
+def load_images(is_generated, images_filenames):
     """Loads the previously selected images into the RAM.
     
     Parameters
@@ -450,13 +450,13 @@ def load_images(is_generated):
         The training set's labels
     """
     print("[INFO] Loading images into RAM", flush = True)
-    X = np.zeros((len(IMAGES_FILENAMES), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS),
+    X = np.zeros((len(images_filenames), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS),
                  dtype=np.uint8)
-    Y = np.zeros((len(IMAGES_FILENAMES), IMG_HEIGHT, IMG_WIDTH, 1),
+    Y = np.zeros((len(images_filenames), IMG_HEIGHT, IMG_WIDTH, 1),
                  dtype=np.bool)
 
-    for n, filename in tqdm(enumerate(IMAGES_FILENAMES),
-                            total=len(IMAGES_FILENAMES)):   
+    for n, filename in tqdm(enumerate(images_filenames),
+                            total=len(images_filenames)):   
         img = imread(IMAGE_DATA_PATH + filename)[:,:,:IMG_CHANNELS]
         img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant',
                      preserve_range=True)
@@ -466,12 +466,12 @@ def load_images(is_generated):
                                      mode='constant', preserve_range=True),
                               axis=-1)
         if is_generated:
-            Y[n] = mask
-        else:
             Y[n] = mask[:,:,0]
+        else:
+            Y[n] = mask
     return X, Y
 
-def train(model, epochs, is_generated, type):
+def train(model, epochs, is_generated, type, load_path):
     """Trains the TensorFlow model.
     
     Parameters
@@ -486,7 +486,7 @@ def train(model, epochs, is_generated, type):
         The TensorFlow model type (0: U-Net, 1: UNet++, 2: UNet++ with
         deep supervision, 3: UNet++ with DS and custom loss)
     """
-    X, Y = load_images(is_generated)
+    X, Y = load_images(is_generated, load_path=load_path)
         
     log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
@@ -540,8 +540,8 @@ def compute_best_threshold(model, type, lower, upper, step):
     NUMBERS_OF_IMAGES_TO_USE = 100 # Number of images to classify
 
     # Load images
-    update_path_train_set(VALIDATION_DATA_PATH)
-    X, Y = load_images(is_generated=True)
+    images_filenames = update_path_train_set(VALIDATION_DATA_PATH)
+    X, Y = load_images(is_generated=True, images_filenames=images_filenames)
 
     # Transformed the given functions for dynamic thresholding
     def patch_to_label(patch, fg):
@@ -695,6 +695,7 @@ def create_folder(folder):
 def main():
     """Main function of the script"""
     args = parse_flags()
+    images_filenames = os.listdir(IMAGE_DATA_PATH)
 
     for folder in [OUTPUT_DATA_IMAGE_PATH, VALIDATION_DATA_PATH]:
         create_folder(folder)
@@ -706,7 +707,7 @@ def main():
 
     if args.generate > 0:
         # Generate the augmented training set
-        generate_images(args.generate)
+        generate_images(args.generate, images_filenames=images_filenames)
     
     if (args.threshold
             and not [f for f in os.listdir(VALIDATION_DATA_PATH+'images')
@@ -721,7 +722,7 @@ def main():
 
     if args.augmented_set:
         # Update the path if user asked to use the augmented set
-        update_path_train_set()
+        images_filenames = update_path_train_set()
 
     # Build the corresponding U-Net model
     model = build_unet_model(args.model)
@@ -737,6 +738,7 @@ def main():
             epochs=args.epochs,
             is_generated=args.augmented_set,
             type=args.model,
+            images_filenames=images_filenames
         )
 
     if args.threshold:
