@@ -15,6 +15,7 @@ report.txt
 
 # Our submissions
 submission-*.csv
+code.zip
 
 # Tensor Flow
 road_segmentation_model.h5
