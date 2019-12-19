@@ -466,9 +466,9 @@ def load_images(is_generated):
                                      mode='constant', preserve_range=True),
                               axis=-1)
         if is_generated:
-            Y[n] = mask[:,:,0]
-        else:
             Y[n] = mask
+        else:
+            Y[n] = mask[:,:,0]
     return X, Y
 
 def train(model, epochs, is_generated, type):
@@ -541,7 +541,7 @@ def compute_best_threshold(model, type, lower, upper, step):
 
     # Load images
     update_path_train_set(VALIDATION_DATA_PATH)
-    X, Y = load_images(is_generated=False)
+    X, Y = load_images(is_generated=True)
 
     # Transformed the given functions for dynamic thresholding
     def patch_to_label(patch, fg):
