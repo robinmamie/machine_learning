@@ -94,7 +94,7 @@ To create our best submission from scratch (with training), please use the follo
 
     python run.py -generate 100 --use-augmented-set --no-load -train 100 --search-threshold
 
-Please note that any training will override the previous model. This means that our best model will be overridden at then end of the first training performed using this script.
+Please note that any training will override the previous model. This means that our best model will be overridden at the end of the first training performed using this script.
 
 ### Note on GPU usage
 
