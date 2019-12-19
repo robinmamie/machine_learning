@@ -94,6 +94,8 @@ To create our best submission from scratch (with training), please use the follo
 
     python run.py -generate 100 --use-augmented-set --no-load -train 100 --search-threshold
 
+Please note that any training will override the previous model. This means that our best model will be overridden at then end of the first training performed using this script.
+
 ### Note on GPU usage
 
 The usage of a GPU does not necessarily create the same results, even with seeding, because of the use of non deterministic functions in `tensorflow-gpu==2.0.0`. We used GPUs throughout our entire project to speed up the execution.
