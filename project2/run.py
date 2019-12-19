@@ -141,7 +141,6 @@ def parse_flags():
         help='Allow memory growth for RTX GPUs (default False)',
     )
     args = parser.parse_args()
-    # TODO test incorrect (negative) values
     return args
 
 def generate_images(number_to_generate, folder=OUTPUT_DATA_IMAGE_PATH):
@@ -432,8 +431,8 @@ def load_model(model):
         print("[INFO] Loading saved model weights")
         model.load_weights(MODEL_SAVE_LOCATION)
     else:
-        print("""[ERROR] Could not locate file for model weights. Proceding
-            without loading weights.""")
+        raise IOError("""[ERROR] Could not locate file for model weights.
+            Proceding without loading weights.""")
 
 def load_images(is_generated):
     """Loads the previously selected images into the RAM.
@@ -544,7 +543,7 @@ def compute_best_threshold(model, type, lower, upper, step):
     update_path_train_set(VALIDATION_DATA_PATH)
     X, Y = load_images(is_generated=False)
 
-    # assign a label to a patch
+    # Transformed the given functions for dynamic thresholding
     def patch_to_label(patch, fg):
         df = np.mean(patch)
         if df > fg:
@@ -552,7 +551,7 @@ def compute_best_threshold(model, type, lower, upper, step):
         else:
             return 0
 
-    def mask_to_submission_strings(im, fg):
+    def mask_to_image(im, fg):
         patch_size = 16
         mask = np.zeros((im.shape[1]//patch_size, im.shape[0]//patch_size))
         for j in range(0, im.shape[1], patch_size):
@@ -569,7 +568,7 @@ def compute_best_threshold(model, type, lower, upper, step):
             predict = predict[0]
         predict = (predict - predict.min())/(predict.max() - predict.min())
         predict = np.squeeze(predict)
-        return mask_to_submission_strings(predict, fg)
+        return mask_to_image(predict, fg)
 
     print('[INFO] Computing the best prediction threshold')
     number_of_pixels_off = []  #average number of missclasified images
@@ -579,7 +578,7 @@ def compute_best_threshold(model, type, lower, upper, step):
         for idx in range(NUMBERS_OF_IMAGES_TO_USE):
             prediction = get_prediction(X[idx], fg)
             total += (np.abs(prediction
-                - mask_to_submission_strings(np.squeeze(Y[idx]), fg)).sum())
+                - mask_to_image(np.squeeze(Y[idx]), fg)).sum())
         number_of_pixels_off.append(total / NUMBERS_OF_IMAGES_TO_USE)
     best_threshold = fg_values[np.argmin(number_of_pixels_off)]
     print(f'[INFO] Best foreground_threshold value : {best_threshold}')
@@ -604,12 +603,11 @@ def predict(model, type):
         return rimg
 
     print("[INFO] Running prediction on submission set")
-    predictions = []
     if not os.path.isdir(PREDICTION_SUBMISSION_DIR):
         os.mkdir(PREDICTION_SUBMISSION_DIR)
     for i in range(1, 51):
         pimg = imread(SUBMISSION_DATA_DIR + f"test_{i}.png")[:,:,:IMG_CHANNELS]
-        predictions.append(predict_img_with_smooth_windowing(
+        prediction = predict_img_with_smooth_windowing(
             pimg,
             window_size=IMG_WIDTH,
             subdivisions=2,  # Minimal amount of overlap for windowing
@@ -620,12 +618,7 @@ def predict(model, type):
                         else model.predict(img_batch_subdiv)[0]
                 )
             )
-        )
-
-    print("[INFO] Writing prediction to drive")
-    pred = np.array(predictions.copy())
-    for i in range(1, 51):
-        pimg = pred[i-1]
+        pimg = prediction
         w = pimg.shape[0]
         h = pimg.shape[1]
         cimg = np.zeros((w, h, 3), dtype=np.uint8)
@@ -636,6 +629,8 @@ def predict(model, type):
         cimg[:, :, 1] = pimg8
         cimg[:, :, 2] = pimg8
         Image.fromarray(cimg).save(PREDICTION_SUBMISSION_DIR + f"gt_{i}.png")
+        print(f"[INFO] Wrote test image number {i} on disk")
+
 
 def predict_aicrowd(foreground_threshold):
     """Creates a submission for AIcrowd.
@@ -678,7 +673,7 @@ def predict_aicrowd(foreground_threshold):
 
     print("[INFO] Parsing prediction for AICrowd")
     time = strftime("%Y%m%dT%H%M%S")
-    submission_filename = f'submission-{time}.csv' # TODO keep this for submission?
+    submission_filename = f'submission-{time}.csv'
     image_filenames = []
     for i in range(1, 51):
         image_filename = f'{PREDICTION_SUBMISSION_DIR}gt_{i}.png'
